@@ -157,7 +157,7 @@ tr:hover .bm-c1,tr:hover .bm-c2{background:#f0f4fa}
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="13" width="4" height="9" fill="#fff" opacity=".9"/><rect x="8" y="8" width="4" height="14" fill="#fff" opacity=".7"/><rect x="14" y="4" width="4" height="18" fill="#fff" opacity=".9"/><rect x="20" y="1" width="4" height="21" fill="#fff" opacity=".7"/></svg>
     <h1>NCR Pilot BM Check</h1><span class="sub">Pilot Group vs Other NCR Team</span>
   </div>
-  <div class="dt">Updated: Sep 01 – Feb 23 (updated Feb 28, 08:31)</div>
+  <div class="dt">Updated: Sep 01 – Feb 23 (updated Feb 28, 09:30)</div>
 </div>
 
 <div class="tabs" id="tabs">
@@ -165,6 +165,7 @@ tr:hover .bm-c1,tr:hover .bm-c2{background:#f0f4fa}
   <button class="tab" data-v="plans">Plans & RR</button>
   <button class="tab" data-v="newstores">New Stores</button>
   <button class="tab" data-v="churn">Churn</button>
+  <button class="tab" data-v="fieldops">Field Ops</button>
 </div>
 
 <div class="fbar" id="fbar">
@@ -189,7 +190,7 @@ tr:hover .bm-c1,tr:hover .bm-c2{background:#f0f4fa}
       <div class="fo-dropbox" id="foUpB">
         <div style="font-size:28px;margin-bottom:12px">📊</div>
         <h2>Upload Forms Export (.xlsx)</h2>
-        <p>Drag & drop or click to select Microsoft Forms export file</p>
+        <p>ATS Visitation Form v2 — drag & drop or click to select</p>
         <input type="file" id="foFIn" accept=".xlsx,.xls,.csv">
       </div>
     </div>
@@ -197,37 +198,17 @@ tr:hover .bm-c1,tr:hover .bm-c2{background:#f0f4fa}
       <div class="fo-ctrl">
         <div class="fo-ctrl-l">
           <div class="fo-badge"><div class="dot"></div><span id="foFN">—</span></div>
-          <span class="fo-meta"><span id="foRC">0</span> records · <span id="foDR">—</span></span>
         </div>
         <div style="display:flex;gap:6px">
           <button class="fo-btn" onclick="document.getElementById('foRIn').click()">↻ Reload</button>
-          <button class="fo-btn fo-btn-accent" onclick="foShowReport()">📋 Copy Short Report</button>
           <input type="file" id="foRIn" accept=".xlsx,.xls,.csv" style="display:none">
         </div>
       </div>
-      <div class="fo-krow" id="foKR"></div>
-      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">01</span><h2>Form Submission Discipline</h2><span class="fo-sec-s">SOD / Visits / EOD per day</span></div><div id="fo-s1"></div></div>
-      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">02</span><h2>Visit Type Breakdown</h2><span class="fo-sec-s">Activation / Reactivation / Portfolio / Store Opening per day</span></div><div id="fo-s2"></div></div>
-      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">03</span><h2>New RAs Connected</h2></div><div id="fo-s3"></div></div>
-      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">04</span><h2>Store Opening</h2><span class="fo-sec-s">Contracts signed & phone numbers collected</span></div><div id="fo-s4"></div></div>
-      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">05</span><h2>Form Details Explorer</h2><span class="fo-sec-s">Filter by type, date, ATS</span></div><div id="fo-s5"></div></div>
-      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">06</span><h2>Top Reasons Not Activated / Reactivated</h2></div><div id="fo-s6"></div></div>
-      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">07</span><h2>Store Segmentation</h2><span class="fo-sec-s">Sales volume & business category</span></div><div id="fo-s7"></div></div>
-    </div>
-  </div>
-</div>
-
-<!-- Field Ops Report Modal -->
-<div class="fo-modal-bg" id="foReportModal">
-  <div class="fo-modal">
-    <div class="fo-modal-hdr"><h2>📋 Short Report</h2><button class="fo-modal-close" onclick="foCloseReport()">✕</button></div>
-    <div class="fo-modal-body">
-      <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
-        <label style="font-size:11px;font-weight:600;color:#555">Date:</label>
-        <select id="foReportDate" onchange="foGenerateReport()" style="padding:5px 10px;border:1px solid #e0e0e0;border-radius:4px;font-size:11px;font-family:inherit;background:#fff;color:#333;cursor:pointer"></select>
-      </div>
-      <pre id="foReportText" style="background:#f7f7f7;border:1px solid #e0e0e0;border-radius:6px;padding:14px 16px;font-size:11px;line-height:1.7;font-family:'Source Sans 3',sans-serif;white-space:pre-wrap;word-break:break-word;max-height:400px;overflow-y:auto;color:#333"></pre>
-      <button class="fo-btn fo-btn-accent" onclick="foCopyReport()" id="foCopyBtn" style="margin-top:10px;padding:8px 20px;font-size:12px;width:100%">📋 Copy to Clipboard</button>
+      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">01</span><h2>Daily Tracker</h2><span class="fo-sec-s">Visits per ATS per day, by type</span></div><div id="fo-s1"></div></div>
+      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">02</span><h2>Activation Tracker</h2><span class="fo-sec-s">Visits, offers, applications, activations by loan</span></div><div id="fo-s2"></div></div>
+      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">03</span><h2>Reactivation Tracker</h2><span class="fo-sec-s">Visits, offers, applications, reactivations by loan</span></div><div id="fo-s3"></div></div>
+      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">04</span><h2>Store Opening Tracker</h2><span class="fo-sec-s">Phone collected, contract signed, rejection reasons</span></div><div id="fo-s4"></div></div>
+      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">05</span><h2>Competitors & Store Segmentation</h2><span class="fo-sec-s">Competitor presence, sales volume, categories</span></div><div id="fo-s7"></div></div>
     </div>
   </div>
 </div>
@@ -251,9 +232,9 @@ const PC="#4e79a7",OC="#f28e2b",GC="#59a14f",RC="#e15759",TC="#76b7b2";
 const R={"Aldrin Jhon Hina": {"s": [34.0, 63.0, 75.0, 97.0, 90.0, 100.0, 107.0, 34.0], "a": [14.0, 32.0, 31.0, 51.0, 47.0, 57.0, 54.0, 16.0], "d": [83534, 192397, 149843, 282376, 245509, 321459, 263448, 77210], "sa": [10, 12, 13, 12, 11, 13, 10, 10], "sl": [6, 10, 10, 8, 8, 11, 9, 6]}, "Arvin Anonuevo": {"s": [90.0, 116.0, 111.0, 127.0, 105.0, 115.0, 145.0, 48.0], "a": [37.0, 55.0, 42.0, 53.0, 46.0, 49.0, 71.0, 25.0], "d": [288184, 434008, 288192, 366191, 305529, 340825, 508261, 164952], "sa": [20, 29, 26, 29, 26, 26, 29, 16], "sl": [15, 21, 15, 22, 20, 20, 20, 10]}, "Dad Ivan Natividad": {"s": [46.0, 73.0, 76.0, 79.0, 86.0, 84.0, 98.0, 35.0], "a": [17.0, 43.0, 41.0, 39.0, 43.0, 36.0, 47.0, 18.0], "d": [75920, 206550, 234430, 185545, 214870, 167284, 242105, 84850], "sa": [7, 8, 8, 7, 8, 7, 8, 5], "sl": [5, 6, 5, 4, 6, 5, 5, 3]}, "Jay Ar Dastas": {"s": [31.0, 55.0, 46.0, 46.0, 43.0, 58.0, 66.0, 44.0], "a": [19.0, 21.0, 27.0, 27.0, 16.0, 32.0, 35.0, 19.0], "d": [168159, 115762, 189147, 167969, 124900, 222724, 228040, 166482], "sa": [10, 12, 11, 9, 13, 17, 12, 15], "sl": [9, 7, 8, 6, 6, 10, 7, 10]}, "Christy Marasigan": {"s": [60.0, 61.0, 91.0, 67.0, 99.0, 106.0, 93.0, 54.0], "a": [23.0, 21.0, 39.0, 30.0, 44.0, 41.0, 41.0, 14.0], "d": [187683, 149606, 245827, 194732, 263018, 266533, 276574, 71414], "sa": [13, 16, 14, 14, 15, 13, 13, 14], "sl": [8, 9, 10, 9, 12, 10, 13, 9]}, "Jhan-Jhan Buac": {"s": [102.0, 120.0, 156.0, 109.0, 125.0, 115.0, 111.0, 64.0], "a": [50.0, 49.0, 61.0, 50.0, 67.0, 47.0, 59.0, 22.0], "d": [305611, 347774, 322645, 270120, 372125, 264880, 377717, 148730], "sa": [16, 17, 15, 13, 19, 16, 15, 16], "sl": [12, 12, 11, 12, 12, 7, 12, 8]}, "Mary Anne Melvida": {"s": [117.0, 153.0, 142.0, 133.0, 125.0, 136.0, 127.0, 60.0], "a": [73.0, 85.0, 76.0, 74.0, 65.0, 85.0, 66.0, 34.0], "d": [354023, 490207, 512038, 421832, 399507, 570514, 339828, 170055], "sa": [24, 26, 20, 19, 21, 19, 19, 15], "sl": [18, 16, 13, 15, 17, 17, 15, 13]}, "Ricardo Sabala Jr.": {"s": [53.0, 92.0, 68.0, 70.0, 80.0, 94.0, 96.0, 59.0], "a": [26.0, 39.0, 33.0, 35.0, 39.0, 39.0, 42.0, 25.0], "d": [211587, 298199, 240098, 251609, 284024, 283149, 320269, 212732], "sa": [11, 11, 8, 10, 15, 11, 15, 11], "sl": [9, 9, 7, 9, 11, 7, 10, 9]}, "Tricxie Mae Nazareta": {"s": [21.0, 51.0, 59.0, 46.0, 34.0, 33.0, 31.0, 22.0], "a": [13.0, 26.0, 36.0, 26.0, 11.0, 13.0, 18.0, 9.0], "d": [97699, 157685, 245062, 168573, 80132, 77776, 164491, 77044], "sa": [5, 9, 9, 11, 10, 12, 10, 9], "sl": [5, 7, 8, 10, 6, 9, 9, 7]}, "Jay Mark Toledana": {"s": [31.0, 41.0, 43.0, 51.0, 29.0, 51.0, 45.0, 15.0], "a": [12.0, 26.0, 24.0, 31.0, 21.0, 21.0, 28.0, 7.0], "d": [79218, 153069, 194520, 217454, 147521, 111500, 194144, 29562], "sa": [13, 15, 13, 19, 12, 17, 15, 8], "sl": [8, 12, 9, 15, 9, 10, 12, 3]}, "Ma. Cynthia Juano Mahinay": {"s": [47.0, 37.0, 39.0, 46.0, 43.0, 49.0, 79.0, 37.0], "a": [20.0, 13.0, 17.0, 23.0, 19.0, 19.0, 37.0, 15.0], "d": [188470, 84864, 139945, 242715, 165722, 204820, 397698, 182710], "sa": [9, 9, 11, 10, 15, 13, 15, 9], "sl": [6, 8, 5, 6, 7, 9, 8, 6]}, "Oscar Saverola Casimo": {"s": [37.0, 51.0, 42.0, 49.0, 36.0, 44.0, 44.0, 15.0], "a": [13.0, 22.0, 18.0, 25.0, 14.0, 21.0, 25.0, 6.0], "d": [92245, 178750, 133228, 181330, 88600, 131582, 179820, 25410], "sa": [7, 7, 7, 7, 7, 7, 6, 3], "sl": [4, 6, 4, 4, 6, 6, 5, 2]}, "Roselyn Espinosa Vargas": {"s": [91.0, 89.0, 108.0, 107.0, 139.0, 105.0, 124.0, 65.0], "a": [48.0, 56.0, 63.0, 54.0, 73.0, 68.0, 67.0, 32.0], "d": [220875, 266830, 377708, 279690, 392174, 337363, 396153, 193250], "sa": [12, 7, 12, 11, 14, 12, 18, 10], "sl": [8, 7, 10, 9, 13, 9, 12, 5]}, "Argenith Orlain Regonaos": {"s": [50.0, 37.0, 59.0, 38.0, 39.0, 47.0, 61.0, 13.0], "a": [24.0, 24.0, 26.0, 20.0, 24.0, 22.0, 28.0, 7.0], "d": [162885, 122667, 169382, 115090, 145284, 81998, 158740, 45936], "sa": [18, 13, 16, 12, 13, 13, 15, 7], "sl": [14, 8, 11, 9, 13, 10, 11, 6]}};
 
 // ─── NEW STORES: Weekly ───
-const W_FL={"Aldrin Jhon Hina": [0, 0, 0, 0, 0, 0, 0, 0], "Arvin Anonuevo": [0, 0, 0, 0, 0, 0, 0, 0], "Dad Ivan Natividad": [0, 0, 0, 0, 0, 0, 0, 0], "Jay Ar Dastas": [0, 0, 0, 0, 0, 0, 0, 0], "Christy Marasigan": [0, 0, 0, 0, 0, 0, 0, 0], "Jhan-Jhan Buac": [0, 0, 0, 0, 0, 0, 0, 0], "Mary Anne Melvida": [0, 0, 0, 0, 0, 0, 0, 0], "Ricardo Sabala Jr.": [0, 0, 0, 0, 0, 0, 0, 0], "Tricxie Mae Nazareta": [0, 0, 0, 0, 0, 0, 0, 0], "Jay Mark Toledana": [0, 0, 0, 0, 0, 0, 0, 0], "Ma. Cynthia Juano Mahinay": [0, 0, 0, 0, 0, 0, 0, 0], "Oscar Saverola Casimo": [0, 0, 0, 0, 0, 0, 0, 0], "Roselyn Espinosa Vargas": [0, 0, 0, 0, 0, 0, 0, 0], "Argenith Orlain Regonaos": [0, 0, 0, 0, 0, 0, 0, 0]};
-const W_FA={"Aldrin Jhon Hina": [0, 0, 0, 0, 0, 0, 0, 0], "Arvin Anonuevo": [0, 0, 0, 0, 0, 0, 0, 0], "Dad Ivan Natividad": [0, 0, 0, 0, 0, 0, 0, 0], "Jay Ar Dastas": [0, 0, 0, 0, 0, 0, 0, 0], "Christy Marasigan": [0, 0, 0, 0, 0, 0, 0, 0], "Jhan-Jhan Buac": [0, 0, 0, 0, 0, 0, 0, 0], "Mary Anne Melvida": [0, 0, 0, 0, 0, 0, 0, 0], "Ricardo Sabala Jr.": [0, 0, 0, 0, 0, 0, 0, 0], "Tricxie Mae Nazareta": [0, 0, 0, 0, 0, 0, 0, 0], "Jay Mark Toledana": [0, 0, 0, 0, 0, 0, 0, 0], "Ma. Cynthia Juano Mahinay": [0, 0, 0, 0, 0, 0, 0, 0], "Oscar Saverola Casimo": [0, 0, 0, 0, 0, 0, 0, 0], "Roselyn Espinosa Vargas": [0, 0, 0, 0, 0, 0, 0, 0], "Argenith Orlain Regonaos": [0, 0, 0, 0, 0, 0, 0, 0]};
-const W_SR={"Aldrin Jhon Hina": [0, 0, 0, 0, 0, 0, 0, 0], "Arvin Anonuevo": [0, 0, 0, 0, 0, 0, 0, 0], "Dad Ivan Natividad": [0, 0, 0, 0, 0, 0, 0, 0], "Jay Ar Dastas": [0, 0, 0, 0, 0, 0, 0, 0], "Christy Marasigan": [0, 0, 0, 0, 0, 0, 0, 0], "Jhan-Jhan Buac": [0, 0, 0, 0, 0, 0, 0, 0], "Mary Anne Melvida": [0, 0, 0, 0, 0, 0, 0, 0], "Ricardo Sabala Jr.": [0, 0, 0, 0, 0, 0, 0, 1], "Tricxie Mae Nazareta": [0, 0, 0, 0, 0, 0, 0, 0], "Jay Mark Toledana": [0, 0, 0, 0, 0, 0, 0, 0], "Ma. Cynthia Juano Mahinay": [0, 0, 0, 0, 0, 0, 0, 0], "Oscar Saverola Casimo": [0, 0, 0, 0, 0, 0, 0, 0], "Roselyn Espinosa Vargas": [0, 0, 0, 0, 0, 0, 0, 0], "Argenith Orlain Regonaos": [0, 0, 0, 0, 0, 0, 0, 0]};
+const W_FL={"Aldrin Jhon Hina": [0, 2, 0, 0, 0, 1, 0, 0], "Arvin Anonuevo": [1, 3, 1, 1, 2, 0, 0, 0], "Dad Ivan Natividad": [0, 0, 0, 0, 0, 0, 1, 0], "Jay Ar Dastas": [2, 1, 1, 1, 0, 0, 0, 0], "Christy Marasigan": [0, 2, 0, 0, 0, 1, 1, 1], "Jhan-Jhan Buac": [1, 0, 0, 0, 1, 0, 1, 0], "Mary Anne Melvida": [3, 0, 0, 0, 0, 2, 0, 0], "Ricardo Sabala Jr.": [0, 1, 0, 0, 1, 0, 1, 1], "Tricxie Mae Nazareta": [0, 0, 0, 1, 1, 1, 2, 1], "Jay Mark Toledana": [1, 0, 0, 2, 0, 0, 0, 0], "Ma. Cynthia Juano Mahinay": [0, 1, 1, 0, 2, 0, 1, 1], "Oscar Saverola Casimo": [0, 0, 0, 0, 0, 1, 1, 0], "Roselyn Espinosa Vargas": [0, 1, 1, 0, 1, 0, 1, 1], "Argenith Orlain Regonaos": [3, 0, 0, 0, 1, 1, 1, 0]};
+const W_FA={"Aldrin Jhon Hina": [1, 1, 0, 0, 0, 3, 0, 0], "Arvin Anonuevo": [2, 3, 1, 0, 2, 1, 1, 0], "Dad Ivan Natividad": [0, 2, 0, 0, 0, 1, 1, 0], "Jay Ar Dastas": [1, 5, 2, 3, 2, 1, 0, 0], "Christy Marasigan": [0, 0, 0, 0, 0, 0, 3, 2], "Jhan-Jhan Buac": [1, 1, 0, 1, 1, 0, 0, 0], "Mary Anne Melvida": [6, 0, 1, 1, 1, 0, 1, 0], "Ricardo Sabala Jr.": [0, 1, 0, 0, 2, 0, 0, 0], "Tricxie Mae Nazareta": [0, 0, 0, 3, 2, 0, 0, 0], "Jay Mark Toledana": [1, 0, 0, 1, 1, 1, 0, 1], "Ma. Cynthia Juano Mahinay": [2, 3, 1, 1, 1, 0, 1, 1], "Oscar Saverola Casimo": [0, 0, 0, 0, 1, 1, 0, 0], "Roselyn Espinosa Vargas": [3, 1, 0, 0, 0, 1, 0, 4], "Argenith Orlain Regonaos": [2, 2, 0, 0, 0, 0, 1, 0]};
+const W_SR={"Aldrin Jhon Hina": [2, 1, 0, 1, 1, 2, 0, 0], "Arvin Anonuevo": [1, 1, 0, 0, 0, 0, 0, 0], "Dad Ivan Natividad": [0, 0, 0, 1, 0, 2, 0, 0], "Jay Ar Dastas": [0, 1, 1, 1, 1, 0, 2, 0], "Christy Marasigan": [0, 0, 0, 0, 1, 2, 1, 2], "Jhan-Jhan Buac": [1, 0, 0, 1, 1, 0, 0, 0], "Mary Anne Melvida": [0, 0, 0, 1, 0, 2, 0, 0], "Ricardo Sabala Jr.": [0, 0, 0, 1, 1, 0, 0, 3], "Tricxie Mae Nazareta": [0, 0, 0, 5, 0, 1, 1, 1], "Jay Mark Toledana": [0, 0, 0, 3, 0, 0, 2, 0], "Ma. Cynthia Juano Mahinay": [1, 1, 0, 4, 1, 1, 0, 2], "Oscar Saverola Casimo": [0, 0, 1, 0, 2, 0, 0, 1], "Roselyn Espinosa Vargas": [1, 0, 0, 0, 0, 1, 2, 2], "Argenith Orlain Regonaos": [1, 0, 0, 1, 0, 1, 3, 2]};
 
 // ─── NEW STORES: Daily (empty) ───
 const D_FL={},D_FA={},D_SR={};
@@ -1183,63 +1164,67 @@ window.genSnapshot=function(weekIdx){
 };
 
 // ════════════════════════════════════════════════════════════════════
-// ═══ FIELD OPS MODULE ═══
+// ═══ FIELD OPS MODULE v2 ═══
 // ════════════════════════════════════════════════════════════════════
 (function(){
 let FO_R=[];
-let FO_MODE='ATS';
 
-// Fact activation data from new stores (daily 1st loans & 1st apps per ATS)
-const FO_FACT_LOANS={"Arvin Anonuevo": {"2026-02-03": 1, "2026-01-26": 1, "2026-02-06": 1, "2026-01-21": 1, "2026-01-16": 2, "2026-01-06": 1, "2026-01-14": 1}, "Aldrin Jhon Hina": {"2026-02-10": 1, "2026-01-18": 1, "2026-01-15": 1}, "Jay Ar Dastas": {"2026-01-07": 1, "2026-01-06": 1, "2026-01-22": 1, "2026-01-16": 1, "2026-01-31": 1, "2026-01-03": 1}, "Dad Ivan Natividad": {"2026-02-16": 1}};
-const FO_FACT_APPS={"Aldrin Jhon Hina": {"2026-02-13": 1, "2026-01-16": 1, "2026-01-08": 1, "2026-02-10": 1, "2026-02-14": 1}, "Jay Ar Dastas": {"2026-01-26": 1, "2026-01-10": 1, "2026-01-15": 1, "2026-02-06": 1, "2026-01-27": 2, "2026-01-13": 1, "2026-02-03": 1, "2026-01-22": 1, "2026-01-12": 2, "2026-02-10": 1, "2026-01-14": 1, "2026-01-03": 1, "2026-01-20": 1}, "Arvin Anonuevo": {"2026-02-13": 1, "2026-02-05": 1, "2026-02-06": 1, "2026-01-21": 1, "2026-01-08": 1, "2026-01-13": 1, "2026-01-12": 1, "2026-01-06": 1, "2026-02-20": 1, "2026-01-14": 1}, "Dad Ivan Natividad": {"2026-01-16": 1, "2026-01-12": 1, "2026-02-20": 1, "2026-02-11": 1}};
-function foFactLoan(name,date){return (FO_FACT_LOANS[name]&&FO_FACT_LOANS[name][date])||0;}
-function foFactApp(name,date){return (FO_FACT_APPS[name]&&FO_FACT_APPS[name][date])||0;}
+/* helpers */
+const fofc=(r,f)=>{const k=Object.keys(r).find(k=>k.toLowerCase().includes(f.toLowerCase()));return k?r[k]:''};
+const fofk=(r,test)=>{const k=Object.keys(r).find(test);return k?r[k]:''};
+const fonum=v=>{const n=parseInt(v);return isNaN(n)?0:n};
+const fopct=(a,b)=>b?Math.round(a/b*100):0;
+const fobadge=(v)=>v>=70?'fo-ok':v>=40?'fo-warn':'fo-miss';
 
-// ── Column helpers ──
-function fc(r,f){const k=Object.keys(r).find(k=>k.toLowerCase().includes(f.toLowerCase()));return k?r[k]:'';}
-const fgF=r=>fc(r,'FORM:')||'';
-const fgN=r=>fc(r,'Name')||'';
-const fgP=r=>fc(r,'Purpose of visit')||'';
-const fgA=r=>fc(r,'Is store activated by loan')||'';
-const fgAp=r=>fc(r,'How many applications were attempted')||'0';
-const fgOf=r=>fc(r,'For how many customers')||fc(r,'how many customers was Salmon offered')||'0';
-const fgCu=r=>fc(r,'Total store customers')||'0';
-const fgT=r=>fc(r,'Start time')||'';
-const fgNR=r=>fc(r,'How many new RAs')||'';
-const fgReason=r=>fc(r,'Reason for not activated')||'';
-const fgStore=r=>fc(r,'Store Name (COPY')||'';
-const fgComp=r=>fc(r,'Competitors visibility')||'';
-const fgNotes=r=>fc(r,'Additional notes')||'';
-const fgSales=r=>fc(r,'General sales volume per month')||'';
-const fgPotential=r=>fc(r,'high sales potential')||'';
-const fgCategory=r=>fc(r,'category of goods')||fc(r,'Select the category')||'';
-const fgContract=r=>fc(r,'Did you get the signed contract')||'';
-const fgDocs=r=>fc(r,'Did you get all the documents')||'';
-const fgOwnerPhone=r=>fc(r,"Owner's phone")||'';
-const fgOwnerName=r=>fc(r,"Owner's name")||'';
-const fgStoreName60=r=>fc(r,"What's name of the store")||fc(r,"name of the store")||'';
-const fgWhyNoDocs=r=>fc(r,'If NO, briefly explain')||fc(r,'If no/partially')||'';
-const fgContractsEOD=r=>fc(r,'How many contracts did you sign')||'';
-const fgActivatedEOD=r=>fc(r,'How many stores did you activate')||'';
-const fgNewStoresEOD=r=>fc(r,'How many NEW stores')||'';
-const fgVisitsEOD=r=>fc(r,'How many stores did you visit today')||'';
-// SOD visit slots
-function fgSODVisits(r){const out=[];for(let i=1;i<=6;i++){const sk=Object.keys(r).find(k=>k.includes('VISIT '+i+':'));const tk=Object.keys(r).find(k=>k.includes('TYPE OF VISIT '+i));if(sk&&r[sk]){out.push({store:r[sk],type:r[tk]||''})}}return out;}
+/* Column accessors for v2 form */
+const fg={
+  name:r=>fofc(r,'Name')||'',
+  store:r=>fofc(r,'Store name')||'',
+  type:r=>fofc(r,'type of visit')||'',
+  start:r=>fofc(r,'Start time')||'',
+  actSales:r=>fofc(r,'Store monthly sales overall')||'',
+  actComp:r=>fofk(r,k=>/^competitors visible in store\?$/i.test(k.trim()))||'',
+  actChecklist:r=>fofc(r,'Activation store readiness checklist')||'',
+  actReady:r=>fofc(r,'Store is fully ready to process the loans:')||'',
+  actWhyNot:r=>{const k=Object.keys(r).find(k=>k.includes('If No: Briefly explain why')&&!k.includes('1'));return k?r[k]:''},
+  actSuccess:r=>fofc(r,'Store was activated by loan during the visit')||'',
+  reactComp:r=>fofk(r,k=>/^competitors visibility\u00a0$/i.test(k))||'',
+  reactReason:r=>fofc(r,'Reason store became inactive')||'',
+  reactChecklist:r=>fofc(r,'Reactivation store readiness checklist')||'',
+  reactMarketing:r=>fofk(r,k=>/^marketing materials installed/i.test(k.trim()))||'',
+  reactSuccess:r=>{const v=fofc(r,'reactivated by loan');return typeof v==='string'?v.trim():String(v||'')},
+  portComp:r=>fofk(r,k=>/^competitors visibility\u00a01$/i.test(k))||'',
+  portChecklist:r=>fofc(r,'Portfolio store checklist readiness')||'',
+  portMarketing:r=>fofk(r,k=>/^marketing materials in good condition/i.test(k.trim()))||'',
+  soCategory:r=>fofc(r,'Store category')||'',
+  soSales:r=>fofk(r,k=>/^monthly sales$/i.test(k.trim()))||'',
+  soComp:r=>fofk(r,k=>/^competitors visible in store\?\n$/i.test(k)||/^competitors visible in store\?\s*$/i.test(k)&&k!==Object.keys(r).find(k2=>/^competitors visible in store\?$/i.test(k2.trim())))||'',
+  soContract:r=>fofc(r,'Contract signed')||'',
+  soWhyNo:r=>fofc(r,'explain why1')||'',
+  soDocs:r=>fofc(r,'All documents collected')||'',
+  soPhone:r=>fofc(r,"owner phone")||'',
+  offered:r=>fofc(r,'offered Salmon loan')||'',
+  attempted:r=>fofc(r,'applications were attempted')||'',
+  possibleRAs:r=>fofc(r,'possible RAs')||'',
+  connectedRAs:r=>fofc(r,'already been connected')||'',
+  newRAs:r=>fofc(r,'new RAs have you connected')||'',
+  totalCust:r=>fofc(r,'Total customers you saw')||'',
+};
 
-function fsd(v){if(!v)return'';const d=v instanceof Date?v:new Date(v);return isNaN(d)?'':d.toISOString().slice(0,10)}
-function ffd(v){if(!v)return'';const d=v instanceof Date?v:new Date(v);if(isNaN(d))return String(v);return['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+' '+d.getDate()}
-function fff(v){if(!v)return'—';const d=v instanceof Date?v:new Date(v);return isNaN(d)?String(v):d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
-function fisY(v){return String(v).toLowerCase().trim().startsWith('yes')}
-function fpctCol(p){return p>=80?'#0d7c5f':p>=50?'#e37400':'#c5221f'}
-function fconvCol(p){return p>=70?'#0d7c5f':p>=40?'#e37400':'#c5221f'}
-function fbar(pct,col){return '<div class="fo-pb-w"><div class="fo-pb"><div class="fo-pb-f" style="width:'+pct+'%;background:'+col+'"></div></div><span class="fo-pb-v" style="color:'+col+'">'+pct+'%</span></div>'}
+function foDateKey(r){
+  const d=fg.start(r);
+  if(!d)return'';
+  if(d instanceof Date)return d.toISOString().slice(0,10);
+  const s=String(d);
+  const iso=s.match(/(\d{4}-\d{2}-\d{2})/);
+  if(iso)return iso[1];
+  const mdy=s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(mdy)return `${mdy[3]}-${mdy[1].padStart(2,'0')}-${mdy[2].padStart(2,'0')}`;
+  return s.slice(0,10);
+}
+const foShortDate=d=>{const[y,mm,dd]=d.split('-');return['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(mm)-1]+' '+parseInt(dd)};
 
-function fisAct(r){const p=fgP(r);return p==='Activation'||p==='Activation/Reactivation'}
-function fisReact(r){const p=fgP(r);return p==='Reactivation'||p==='Activation/Reactivation'}
-function fisPort(r){return fgP(r).toLowerCase().includes('portfolio')}
-function fisSO(r){return fgP(r).toLowerCase().includes('store opening')||fgP(r).toLowerCase().includes('contract signing')}
-
-// ── File handling ──
+/* ── File handling ── */
 const foUB=document.getElementById('foUpB'),foFI=document.getElementById('foFIn'),foRI=document.getElementById('foRIn');
 foUB.onclick=()=>foFI.click();
 foUB.ondragover=e=>{e.preventDefault();foUB.classList.add('dov')};
@@ -1262,297 +1247,265 @@ function foLd(f){
   };reader.readAsArrayBuffer(f);
 }
 
-function foDetectMode(){
-  const hasForm=FO_R.some(r=>fgF(r)==='STORE VISIT'||fgF(r)==='START OF THE DAY'||fgF(r)==='END OF THE DAY');
-  FO_MODE=hasForm?'ATS':'STORES';
-}
-
-// ── Calendar helper ──
-function allCal(sd){if(!sd.length)return sd;const out=[];const s=new Date(sd[0]+'T12:00:00Z'),e=new Date(sd[sd.length-1]+'T12:00:00Z');for(let d=new Date(s);d<=e;d.setUTCDate(d.getUTCDate()+1))out.push(d.toISOString().slice(0,10));return out;}
-const dl=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-
-// ═══ MAIN ═══
+/* ═══ MAIN ═══ */
 function foGo(){
   try{
-  foDetectMode();
-  const D=FO_R;
-  let vis,eod,sod;
-  if(FO_MODE==='ATS'){vis=D.filter(r=>fgF(r)==='STORE VISIT');eod=D.filter(r=>fgF(r)==='END OF THE DAY');sod=D.filter(r=>fgF(r)==='START OF THE DAY');}
-  else{vis=D;eod=[];sod=[];}
-  const allD=[...new Set(D.map(r=>fsd(fgT(r))).filter(Boolean))].sort();
-  const allN=[...new Set(D.map(fgN).filter(Boolean))].sort();
-  if(allD.length)document.getElementById('foDR').textContent=fff(allD[0])+' → '+fff(allD[allD.length-1]);
-  document.getElementById('foRC').textContent=D.length;
-  
-  const actV=vis.filter(fisAct),reaV=vis.filter(fisReact),portV=vis.filter(fisPort),soV=vis.filter(fisSO);
-  const actY=actV.filter(r=>fisY(fgA(r))).length,reaY=reaV.filter(r=>fisY(fgA(r))).length;
-  const totNR=eod.reduce((s,r)=>s+(parseInt(fgNR(r))||0),0);
-  const soContracts=soV.filter(r=>fisY(fgContract(r))).length;
-  const soPhones=soV.filter(r=>{const p=fgOwnerPhone(r);return p&&p.trim()&&!['n/a','na','-','none'].includes(p.trim().toLowerCase())}).length;
-  const totApK=vis.reduce((s,r)=>s+(parseInt(fgAp(r))||0),0),totOfK=vis.reduce((s,r)=>s+(parseInt(fgOf(r))||0),0);
+  const rows=FO_R;
+  if(!rows.length)return;
+  const dates=[...new Set(rows.map(foDateKey))].filter(d=>d).sort();
+  const ats=[...new Set(rows.map(r=>fg.name(r)))].filter(n=>n).sort();
+  const act=rows.filter(r=>fg.type(r)==='Activation');
+  const react=rows.filter(r=>fg.type(r)==='Reactivation');
+  const port=rows.filter(r=>fg.type(r)==='Portfolio');
+  const so=rows.filter(r=>fg.type(r)==='Store Opening');
 
-  let kH=`<div class="fo-kc"><div class="fo-kl">Store Visits</div><div class="fo-kv">${vis.length}</div><div class="fo-ks">${allD.length} days</div></div>
-    <div class="fo-kc"><div class="fo-kl">Activation</div><div class="fo-kv">${actV.length?Math.round(actY/actV.length*100):0}%</div><div class="fo-ks">${actY}/${actV.length} activated</div></div>
-    <div class="fo-kc"><div class="fo-kl">Reactivation</div><div class="fo-kv">${reaV.length?Math.round(reaY/reaV.length*100):0}%</div><div class="fo-ks">${reaY}/${reaV.length}</div></div>
-    <div class="fo-kc"><div class="fo-kl">Store Opening</div><div class="fo-kv">${soV.length}</div><div class="fo-ks">${soContracts} contracts</div></div>
-    <div class="fo-kc"><div class="fo-kl">New RAs</div><div class="fo-kv">${totNR}</div><div class="fo-ks">connected</div></div>
-    <div class="fo-kc"><div class="fo-kl">Applications</div><div class="fo-kv">${totApK}</div><div class="fo-ks">${totOfK} offered</div></div>`;
-  document.getElementById('foKR').innerHTML=kH;
-
-  foS1_Discipline(allD,allN,D,vis,sod,eod);
-  foS2_VisitTypes(allD,allN,vis);
-  foS3_NewRAs(eod,allD);
-  foS4_StoreOpening(soV,allD,allN);
-  foS5_Explorer(D,vis,sod,eod,allD,allN);
-  foS6_Reasons(actV,reaV);
-  foS7_Segmentation(vis);
+  foS1_Daily(rows,ats,dates);
+  foS2_Activation(act,ats,dates);
+  foS3_Reactivation(react,ats,dates);
+  foS4_StoreOpening(so,ats,dates);
+  foS7_Segmentation(rows,act,react,port,so);
   }catch(e){console.error('foGo():',e);alert('Field Ops error: '+e.message);}
 }
 
-// ═══ S1: Form Submission Discipline ═══
-function foS1_Discipline(dates,names,D,vis,sod,eod){
-  const cal=allCal(dates);
-  let h='<th>ATS Name</th>'+cal.map(d=>'<th class="fo-n" style="min-width:62px"><div style="font-size:8px;color:#999">'+dl[new Date(d+'T12:00:00Z').getUTCDay()]+'</div>'+ffd(d)+'</th>').join('')+'<th class="fo-n" style="background:#eef1f6;min-width:96px">Summary</th>';
-  let b=names.map(name=>{let tV=0;const cl=cal.map(d=>{const s=sod.filter(r=>fgN(r)===name&&fsd(fgT(r))===d).length,v=vis.filter(r=>fgN(r)===name&&fsd(fgT(r))===d).length,e=eod.filter(r=>fgN(r)===name&&fsd(fgT(r))===d).length;tV+=v;if(!s&&!v&&!e)return '<td class="fo-dc"><span style="color:#ccc;font-size:9px">—</span></td>';return '<td class="fo-dc"><div class="fo-db-g"><span class="'+(s?'fo-ok':'fo-miss')+'" title="SOD">S</span><span class="'+(v?'fo-ok':'fo-miss')+'" title="Visits:'+v+'">'+v+'</span><span class="'+(e?'fo-ok':'fo-miss')+'" title="EOD">E</span></div></td>';}).join('');const wd=cal.filter(d=>sod.some(r=>fgN(r)===name&&fsd(fgT(r))===d)||vis.some(r=>fgN(r)===name&&fsd(fgT(r))===d)||eod.some(r=>fgN(r)===name&&fsd(fgT(r))===d)).length;return '<tr><td class="fo-rn">'+name+'</td>'+cl+'<td style="background:#f7f8fb;font-size:10px;text-align:center"><b>'+wd+'</b>d · <b>'+tV+'</b>v · avg <b>'+(wd?(tV/wd).toFixed(1):0)+'</b>/d</td></tr>';}).join('');
-  const tc=cal.map(d=>'<td class="fo-dc"><div class="fo-db-g"><span class="fo-na">'+sod.filter(r=>fsd(fgT(r))===d).length+'</span><span class="fo-ok" style="width:22px">'+vis.filter(r=>fsd(fgT(r))===d).length+'</span><span class="fo-na">'+eod.filter(r=>fsd(fgT(r))===d).length+'</span></div></td>').join('');
-  b+='<tr class="fo-rt"><td class="fo-rn">TOTAL</td>'+tc+'<td style="background:#e8ebf0;font-size:10px;text-align:center"><b>'+sod.length+'</b>S · <b>'+vis.length+'</b>V · <b>'+eod.length+'</b>E</td></tr>';
-  document.getElementById('fo-s1').innerHTML=`<div class="fo-card"><div class="fo-card-h"><h3>Daily Tracker</h3><span style="font-size:10px;color:#999;margin-left:auto"><span class="fo-ok">S</span>=SOD <span class="fo-ok">n</span>=Visits <span class="fo-ok">E</span>=EOD <span class="fo-miss">■</span>=Missing</span></div><div class="fo-card-b"><table><thead><tr>${h}</tr></thead><tbody>${b}</tbody></table></div></div>`;
+/* ═══ BM-style table builder ═══ */
+function foBMTable(targetId,subsetRows,allDatesOverride,metricsConfig){
+  const {metrics,mCol,mKey,getData,highlightMetric,highlightColor}=metricsConfig;
+  if(!subsetRows.length){document.getElementById(targetId).innerHTML='<p style="color:#999;font-size:12px">No visits.</p>';return}
+
+  const atsInSubset=[...new Set(subsetRows.map(r=>fg.name(r)))].filter(n=>n).sort();
+  const datesInSubset=allDatesOverride||[...new Set(subsetRows.map(foDateKey))].filter(d=>d).sort();
+
+  const m={};
+  subsetRows.forEach(r=>{
+    const n=fg.name(r),d=foDateKey(r);
+    if(!n||!d)return;
+    const key=n+'|'+d;
+    if(!m[key])m[key]={};
+    getData(r,m[key]);
+  });
+
+  let h=`<div class="tbl-wrap" style="max-height:70vh;overflow:auto"><table style="border-collapse:separate;border-spacing:0">`;
+  h+=`<thead><tr style="position:sticky;top:0;z-index:10"><th style="text-align:left;position:sticky;left:0;z-index:12;background:#f0f0f0;min-width:160px;border-right:1px solid #e0e0e0">ATS</th>`;
+  h+=`<th style="position:sticky;left:160px;z-index:12;background:#f0f0f0;min-width:130px;border-right:1px solid #e0e0e0;text-align:left">Metric</th>`;
+  datesInSubset.forEach(d=>{h+=`<th class="hm" style="background:#f0f0f0;min-width:50px">${foShortDate(d)}</th>`});
+  h+=`<th class="hm" style="font-weight:800;background:#e8e8e8">Σ</th></tr></thead><tbody>`;
+
+  atsInSubset.forEach((n,ai)=>{
+    const bgGroup=ai%2===0?'#fff':'#fafafa';
+    metrics.forEach((mt,mi)=>{
+      h+=`<tr style="background:${bgGroup}">`;
+      if(mi===0){
+        h+=`<td rowspan="${metrics.length}" style="font-weight:600;white-space:nowrap;position:sticky;left:0;z-index:2;background:${bgGroup};border-right:none;vertical-align:top;padding-top:10px;border-bottom:1px solid #ddd">${n}</td>`;
+      }
+      h+=`<td style="position:sticky;left:160px;z-index:2;background:${bgGroup};border-right:1px solid #e0e0e0;font-size:11px;color:${mCol[mt]};font-weight:500;white-space:nowrap;box-shadow:2px 0 4px rgba(0,0,0,0.04);${mi===metrics.length-1?'border-bottom:1px solid #ddd;':''}">${mt}</td>`;
+      let rowT=0;
+      datesInSubset.forEach(d=>{
+        const data=m[n+'|'+d];
+        const v=data?(data[mKey[mt]]||0):0;
+        rowT+=v;
+        const isHL=mt===highlightMetric&&v>0;
+        h+=`<td class="hm" style="font-size:11px;${isHL?'color:'+highlightColor+';font-weight:700;':''}${mi===metrics.length-1?'border-bottom:1px solid #ddd;':''}">${v||'<span style=\"color:#ddd\">·</span>'}</td>`;
+      });
+      const isHL=mt===highlightMetric&&rowT>0;
+      h+=`<td class="hm" style="font-weight:600;background:#f5f5f5;${isHL?'color:'+highlightColor+';':''}${mi===metrics.length-1?'border-bottom:1px solid #ddd;':''}">${rowT||''}</td></tr>`;
+    });
+  });
+
+  /* Grand Total */
+  metrics.forEach((mt,mi)=>{
+    h+=`<tr class="fo-rt">`;
+    if(mi===0) h+=`<td rowspan="${metrics.length}" style="font-weight:700;position:sticky;left:0;z-index:2;background:#f0f0f0;border-right:none;vertical-align:top;padding-top:8px">Total</td>`;
+    h+=`<td style="position:sticky;left:160px;z-index:2;background:#f0f0f0;border-right:1px solid #e0e0e0;font-size:11px;color:${mCol[mt]};font-weight:700">${mt}</td>`;
+    let rowT=0;
+    datesInSubset.forEach(d=>{
+      let dayV=0;
+      atsInSubset.forEach(n=>{const data=m[n+'|'+d];if(data)dayV+=(data[mKey[mt]]||0)});
+      rowT+=dayV;
+      h+=`<td class="hm">${dayV||''}</td>`;
+    });
+    h+=`<td class="hm" style="background:#e8e8e8;font-weight:800">${rowT}</td></tr>`;
+  });
+
+  h+=`</tbody></table></div>`;
+  return h;
 }
 
-// ═══ S2: Visit Type Breakdown ═══
-function foS2_VisitTypes(dates,names,vis){
-  const cal=allCal(dates);
-  const show=cal.length>21?cal.slice(-21):cal;
-  const types=[{key:'act',label:'Act',fn:fisAct,col:'#4e79a7'},{key:'react',label:'React',fn:fisReact,col:'#f28e2b'},{key:'port',label:'Port',fn:fisPort,col:'#59a14f'},{key:'so',label:'SO',fn:fisSO,col:'#e15759'}];
-  const tl=types.length;
+/* ═══ S1: Daily Tracker ═══ */
+function foS1_Daily(rows,ats,dates){
+  const types=['Activation','Reactivation','Portfolio','Store Opening'];
+  const tCol={Activation:'#e65100',Reactivation:'#7b1fa2',Portfolio:'#4e79a7','Store Opening':'#0d7c5f'};
+  const m={};
+  rows.forEach(r=>{const n=fg.name(r),d=foDateKey(r),t=fg.type(r);if(!n||!d||!t)return;const k=n+'|'+d+'|'+t;m[k]=(m[k]||0)+1});
 
-  let h='<th>ATS Name</th>'+show.map(d=>'<th class="fo-n" colspan="'+tl+'" style="border-left:2px solid #e0e0e0"><div style="font-size:8px;color:#999">'+dl[new Date(d+'T12:00:00Z').getUTCDay()]+'</div>'+ffd(d)+'</th>').join('')+'<th class="fo-n" colspan="'+tl+'" style="background:#eef1f6;border-left:2px solid #4a4a4a">Σ</th>';
-  let sub='<th></th>'+show.map(()=>types.map((t,i)=>'<th class="fo-n" style="font-size:8px;color:'+t.col+';'+(i===0?'border-left:2px solid #e0e0e0;':'')+'min-width:24px">'+t.label+'</th>').join('')).join('')+types.map((t,i)=>'<th class="fo-n" style="font-size:8px;background:#eef1f6;color:'+t.col+';'+(i===0?'border-left:2px solid #4a4a4a;':'')+'">'+t.label+'</th>').join('');
+  let h=`<div class="tbl-wrap" style="max-height:70vh;overflow:auto"><table style="border-collapse:separate;border-spacing:0">`;
+  h+=`<thead><tr style="position:sticky;top:0;z-index:10"><th style="text-align:left;position:sticky;left:0;z-index:12;background:#f0f0f0;min-width:160px;border-right:1px solid #e0e0e0">ATS</th>`;
+  h+=`<th style="position:sticky;left:160px;z-index:12;background:#f0f0f0;min-width:130px;border-right:1px solid #e0e0e0;text-align:left">Metric</th>`;
+  dates.forEach(d=>{h+=`<th class="hm" style="background:#f0f0f0;min-width:50px">${foShortDate(d)}</th>`});
+  h+=`<th class="hm" style="font-weight:800;background:#e8e8e8">Σ</th></tr></thead><tbody>`;
 
-  let b=names.map(name=>{
-    const sums=types.map(()=>0);
-    const cl=show.map(d=>{
-      return types.map((t,ti)=>{
-        const cnt=vis.filter(r=>fgN(r)===name&&fsd(fgT(r))===d&&t.fn(r)).length;
-        sums[ti]+=cnt;
-        return '<td class="fo-n'+(cnt?'':' fo-n0')+'" style="'+(ti===0?'border-left:2px solid #e0e0e0;':'')+'font-size:10px">'+(cnt||'·')+'</td>';
-      }).join('');
-    }).join('');
-    const tot=sums.reduce((a,b)=>a+b,0);
-    const sm=types.map((t,ti)=>'<td class="fo-n" style="background:#f7f8fb;font-weight:600;'+(ti===0?'border-left:2px solid #4a4a4a;':'')+'color:'+t.col+'">'+sums[ti]+'</td>').join('');
-    return '<tr><td class="fo-rn">'+name+'</td>'+cl+sm+'</tr>';
-  }).join('');
-
-  // Total row
-  const tSums=types.map(()=>0);
-  const tCl=show.map(d=>types.map((t,ti)=>{const cnt=vis.filter(r=>fsd(fgT(r))===d&&t.fn(r)).length;tSums[ti]+=cnt;return '<td class="fo-n" style="font-size:10px;'+(ti===0?'border-left:2px solid #e0e0e0;':'')+'">'+cnt+'</td>';}).join('')).join('');
-  b+='<tr class="fo-rt"><td class="fo-rn">TOTAL</td>'+tCl+types.map((t,ti)=>'<td class="fo-n" style="background:#e8ebf0;font-weight:700;'+(ti===0?'border-left:2px solid #4a4a4a;':'')+'color:'+t.col+'">'+tSums[ti]+'</td>').join('')+'</tr>';
-
-  document.getElementById('fo-s2').innerHTML=`<div class="fo-card"><div class="fo-card-h"><h3>Visit Type per Day</h3><span style="font-size:10px;color:#999;margin-left:auto"><span style="color:#4e79a7;font-weight:700">Act</span>=Activation <span style="color:#f28e2b;font-weight:700">React</span>=Reactivation <span style="color:#59a14f;font-weight:700">Port</span>=Portfolio <span style="color:#e15759;font-weight:700">SO</span>=Store Opening</span></div><div class="fo-card-b"><table><thead><tr>${h}</tr><tr>${sub}</tr></thead><tbody>${b}</tbody></table></div></div>`;
+  ats.forEach((n,ai)=>{
+    const bgGroup=ai%2===0?'#fff':'#fafafa';
+    types.forEach((t,ti)=>{
+      h+=`<tr style="background:${bgGroup}">`;
+      if(ti===0) h+=`<td rowspan="${types.length}" style="font-weight:600;white-space:nowrap;position:sticky;left:0;z-index:2;background:${bgGroup};border-right:none;vertical-align:top;padding-top:10px;border-bottom:1px solid #ddd">${n}</td>`;
+      h+=`<td style="position:sticky;left:160px;z-index:2;background:${bgGroup};border-right:1px solid #e0e0e0;font-size:11px;color:${tCol[t]};font-weight:500;white-space:nowrap;box-shadow:2px 0 4px rgba(0,0,0,0.04);${ti===types.length-1?'border-bottom:1px solid #ddd;':''}">${t}</td>`;
+      let rowT=0;
+      dates.forEach(d=>{const v=m[n+'|'+d+'|'+t]||0;rowT+=v;h+=`<td class="hm" style="font-size:11px;${ti===types.length-1?'border-bottom:1px solid #ddd;':''}">${v||'<span style=\"color:#ddd\">·</span>'}</td>`});
+      h+=`<td class="hm" style="font-weight:600;background:#f5f5f5;${ti===types.length-1?'border-bottom:1px solid #ddd;':''}">${rowT||''}</td></tr>`;
+    });
+  });
+  /* Grand Total */
+  h+=`<tr class="fo-rt"><td style="font-weight:700;position:sticky;left:0;z-index:2;background:#f0f0f0;border-right:none">Total</td>`;
+  h+=`<td style="position:sticky;left:160px;z-index:2;background:#f0f0f0;border-right:1px solid #e0e0e0;font-size:11px;font-weight:700">All</td>`;
+  let grandTotal=0;
+  dates.forEach(d=>{const dayT=rows.filter(r=>fg.name(r)&&foDateKey(r)===d).length;grandTotal+=dayT;h+=`<td class="hm" style="font-weight:700">${dayT||''}</td>`});
+  h+=`<td class="hm" style="background:#e8e8e8;font-weight:800">${grandTotal}</td></tr>`;
+  h+=`</tbody></table></div>`;
+  document.getElementById('fo-s1').innerHTML=h;
 }
 
-// ═══ S3: New RAs ═══
-function foS3_NewRAs(eod,allDates){
-  const dates=[...new Set(eod.map(r=>fsd(fgT(r))).filter(Boolean))].sort();
-  const names=[...new Set(eod.map(fgN).filter(Boolean))].sort();
-  if(!dates.length){document.getElementById('fo-s3').innerHTML='<p style="color:#999;font-size:12px">No EOD data.</p>';return;}
-  let h='<th>ATS Name</th>'+dates.map(d=>'<th class="fo-n">'+ffd(d)+'</th>').join('')+'<th class="fo-n" style="background:#eef1f6">Σ</th>';
-  let b=names.map(name=>{const vals=dates.map(d=>eod.filter(r=>fgN(r)===name&&fsd(fgT(r))===d).reduce((s,r)=>s+(parseInt(fgNR(r))||0),0));const sum=vals.reduce((a,b)=>a+b,0);return '<tr><td class="fo-rn">'+name+'</td>'+vals.map(v=>v?'<td class="fo-n fo-nh">'+v+'</td>':'<td class="fo-n fo-n0">–</td>').join('')+'<td class="fo-n fo-nh" style="background:#f7f8fb;font-weight:700">'+sum+'</td></tr>';}).join('');
-  document.getElementById('fo-s3').innerHTML=`<div class="fo-card"><div class="fo-card-h"><h3>New RAs per Day</h3></div><div class="fo-card-b"><table><thead><tr>${h}</tr></thead><tbody>${b}</tbody></table></div></div>`;
+/* ═══ S2: Activation Tracker ═══ */
+function foS2_Activation(act){
+  const h=foBMTable('fo-s2',act,null,{
+    metrics:['Visits','Offered','Attempted','Activated'],
+    mCol:{Visits:'#4a4a4a',Offered:'#4e79a7',Attempted:'#e65100',Activated:'#0d7c5f'},
+    mKey:{Visits:'Visits',Offered:'Offered',Attempted:'Attempted',Activated:'Activated'},
+    getData:(r,d)=>{d.Visits=(d.Visits||0)+1;d.Offered=(d.Offered||0)+fonum(fg.offered(r));d.Attempted=(d.Attempted||0)+fonum(fg.attempted(r));d.Activated=(d.Activated||0)+(fg.actSuccess(r)==='Yes'?1:0)},
+    highlightMetric:'Activated',highlightColor:'#0d7c5f'
+  });
+  if(h)document.getElementById('fo-s2').innerHTML=h;
 }
 
-// ═══ S4: Store Opening ═══
-function foS4_StoreOpening(soV,allDates,allNames){
-  if(!soV.length){document.getElementById('fo-s4').innerHTML='<p style="color:#999;font-size:12px">No Store Opening visits.</p>';return;}
-  const dates=[...new Set(soV.map(r=>fsd(fgT(r))).filter(Boolean))].sort();
-  const names=[...new Set(soV.map(fgN).filter(Boolean))].sort();
-  const show=dates.length>14?dates.slice(-14):dates;
+/* ═══ S3: Reactivation Tracker ═══ */
+function foS3_Reactivation(react){
+  const h=foBMTable('fo-s3',react,null,{
+    metrics:['Visits','Offered','Attempted','Reactivated'],
+    mCol:{Visits:'#4a4a4a',Offered:'#4e79a7',Attempted:'#e65100',Reactivated:'#7b1fa2'},
+    mKey:{Visits:'Visits',Offered:'Offered',Attempted:'Attempted',Reactivated:'Reactivated'},
+    getData:(r,d)=>{d.Visits=(d.Visits||0)+1;d.Offered=(d.Offered||0)+fonum(fg.offered(r));d.Attempted=(d.Attempted||0)+fonum(fg.attempted(r));d.Reactivated=(d.Reactivated||0)+(fg.reactSuccess(r)==='Yes'?1:0)},
+    highlightMetric:'Reactivated',highlightColor:'#7b1fa2'
+  });
+  if(h)document.getElementById('fo-s3').innerHTML=h;
+}
 
-  // KPIs
-  const totalSO=soV.length;
-  const signed=soV.filter(r=>fisY(fgContract(r))).length;
-  const phones=soV.filter(r=>{const p=fgOwnerPhone(r);return p&&p.trim()&&!['n/a','na','-','none',''].includes(p.trim().toLowerCase())}).length;
-  const docsOk=soV.filter(r=>fisY(fgDocs(r))).length;
+/* ═══ S4: Store Opening Tracker ═══ */
+function foS4_StoreOpening(so){
+  if(!so.length){document.getElementById('fo-s4').innerHTML='<p style="color:#999;font-size:12px">No Store Opening visits.</p>';return}
+  const hasPhone=v=>{if(!v)return false;return String(v).replace(/\D/g,'').length>=7};
 
-  let html=`<div style="display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap">
-    <div class="fo-kc" style="flex:1;min-width:120px"><div class="fo-kl">Total Visits</div><div class="fo-kv">${totalSO}</div></div>
-    <div class="fo-kc" style="flex:1;min-width:120px"><div class="fo-kl">Contracts Signed</div><div class="fo-kv" style="color:#0d7c5f">${signed}</div><div class="fo-ks">${totalSO?Math.round(signed/totalSO*100):0}% conv.</div></div>
-    <div class="fo-kc" style="flex:1;min-width:120px"><div class="fo-kl">Phones Collected</div><div class="fo-kv" style="color:#4e79a7">${phones}</div><div class="fo-ks">${totalSO?Math.round(phones/totalSO*100):0}%</div></div>
-    <div class="fo-kc" style="flex:1;min-width:120px"><div class="fo-kl">Docs Complete</div><div class="fo-kv" style="color:#7b1fa2">${docsOk}</div><div class="fo-ks">${totalSO?Math.round(docsOk/totalSO*100):0}%</div></div>
-  </div>`;
+  const atsS=[...new Set(so.map(r=>fg.name(r)))].filter(n=>n).sort();
+  const sDates=[...new Set(so.map(foDateKey))].filter(d=>d).sort();
+  const m={};const reasonsList=[];
+  so.forEach(r=>{
+    const n=fg.name(r),d=foDateKey(r);if(!n||!d)return;
+    const key=n+'|'+d;
+    if(!m[key])m[key]={Visits:0,Phone:0,Contract:0};
+    m[key].Visits++;
+    if(hasPhone(fg.soPhone(r)))m[key].Phone++;
+    if(fg.soContract(r)==='Yes')m[key].Contract++;
+    if(fg.soContract(r)!=='Yes'){const why=fg.soWhyNo(r);if(why)reasonsList.push({ats:n,date:d,store:fg.store(r),reason:why})}
+  });
 
-  // Table: ATS × Date → visits / contracts / phones
-  let th='<th>ATS Name</th>'+show.map(d=>'<th class="fo-n" colspan="2" style="border-left:2px solid #e0e0e0">'+ffd(d)+'</th>').join('')+'<th class="fo-n" style="background:#eef1f6;border-left:2px solid #4a4a4a">Σ Vis</th><th class="fo-n" style="background:#eef1f6">Σ ✍️</th><th class="fo-n" style="background:#eef1f6">Σ 📱</th>';
-  let tsub='<th></th>'+show.map(()=>'<th class="fo-n" style="font-size:8px;border-left:2px solid #e0e0e0">Vis</th><th class="fo-n" style="font-size:8px;color:#0d7c5f">✍️</th>').join('')+'<th></th><th></th><th></th>';
+  const metrics=['Visits','Phone Collected','Contract Signed'];
+  const mCol={'Visits':'#4a4a4a','Phone Collected':'#4e79a7','Contract Signed':'#0d7c5f'};
+  const mKey2={'Visits':'Visits','Phone Collected':'Phone','Contract Signed':'Contract'};
 
-  let tb=names.map(name=>{
-    let tv=0,tc=0,tp=0;
-    const cl=show.map(d=>{
-      const rows=soV.filter(r=>fgN(r)===name&&fsd(fgT(r))===d);
-      const v=rows.length;
-      const c=rows.filter(r=>fisY(fgContract(r))).length;
-      tv+=v;tc+=c;
-      const ph=rows.filter(r=>{const p=fgOwnerPhone(r);return p&&p.trim()&&!['n/a','na','-','none',''].includes(p.trim().toLowerCase())}).length;
-      tp+=ph;
-      return '<td class="fo-n'+(v?'':' fo-n0')+'" style="border-left:2px solid #e0e0e0">'+(v||'·')+'</td><td class="fo-n'+(c?' fo-ng':' fo-n0')+'">'+(c||'·')+'</td>';
-    }).join('');
-    return '<tr><td class="fo-rn">'+name+'</td>'+cl+'<td class="fo-n" style="border-left:2px solid #4a4a4a;background:#f7f8fb;font-weight:600">'+tv+'</td><td class="fo-n fo-ng" style="background:#f7f8fb;font-weight:600">'+tc+'</td><td class="fo-n" style="background:#f7f8fb;font-weight:600;color:#4e79a7">'+tp+'</td></tr>';
-  }).join('');
+  let h=`<div class="tbl-wrap" style="max-height:70vh;overflow:auto"><table style="border-collapse:separate;border-spacing:0">`;
+  h+=`<thead><tr style="position:sticky;top:0;z-index:10"><th style="text-align:left;position:sticky;left:0;z-index:12;background:#f0f0f0;min-width:160px;border-right:1px solid #e0e0e0">ATS</th>`;
+  h+=`<th style="position:sticky;left:160px;z-index:12;background:#f0f0f0;min-width:130px;border-right:1px solid #e0e0e0;text-align:left">Metric</th>`;
+  sDates.forEach(d=>{h+=`<th class="hm" style="background:#f0f0f0;min-width:50px">${foShortDate(d)}</th>`});
+  h+=`<th class="hm" style="font-weight:800;background:#e8e8e8">Σ</th></tr></thead><tbody>`;
 
-  html+=`<div class="fo-card"><div class="fo-card-h"><h3>Visits & Contracts per Day</h3><span style="font-size:10px;color:#999;margin-left:auto">✍️=Contract signed · 📱=Phone collected</span></div><div class="fo-card-b"><table><thead><tr>${th}</tr><tr>${tsub}</tr></thead><tbody>${tb}</tbody></table></div></div>`;
+  atsS.forEach((n,ai)=>{
+    const bgGroup=ai%2===0?'#fff':'#fafafa';
+    metrics.forEach((mt,mi)=>{
+      h+=`<tr style="background:${bgGroup}">`;
+      if(mi===0) h+=`<td rowspan="${metrics.length}" style="font-weight:600;white-space:nowrap;position:sticky;left:0;z-index:2;background:${bgGroup};border-right:none;vertical-align:top;padding-top:10px;border-bottom:1px solid #ddd">${n}</td>`;
+      h+=`<td style="position:sticky;left:160px;z-index:2;background:${bgGroup};border-right:1px solid #e0e0e0;font-size:11px;color:${mCol[mt]};font-weight:500;white-space:nowrap;box-shadow:2px 0 4px rgba(0,0,0,0.04);${mi===metrics.length-1?'border-bottom:1px solid #ddd;':''}">${mt}</td>`;
+      let rowT=0;
+      sDates.forEach(d=>{const data=m[n+'|'+d];const v=data?(data[mKey2[mt]]||0):0;rowT+=v;const isHL=mt==='Contract Signed'&&v>0;h+=`<td class="hm" style="font-size:11px;${isHL?'color:#0d7c5f;font-weight:700;':''}${mi===metrics.length-1?'border-bottom:1px solid #ddd;':''}">${v||'<span style=\"color:#ddd\">·</span>'}</td>`});
+      const isHL=mt==='Contract Signed'&&rowT>0;
+      h+=`<td class="hm" style="font-weight:600;background:#f5f5f5;${isHL?'color:#0d7c5f;':''}${mi===metrics.length-1?'border-bottom:1px solid #ddd;':''}">${rowT||''}</td></tr>`;
+    });
+  });
+  metrics.forEach((mt,mi)=>{
+    h+=`<tr class="fo-rt">`;if(mi===0)h+=`<td rowspan="${metrics.length}" style="font-weight:700;position:sticky;left:0;z-index:2;background:#f0f0f0;border-right:none;vertical-align:top;padding-top:8px">Total</td>`;
+    h+=`<td style="position:sticky;left:160px;z-index:2;background:#f0f0f0;border-right:1px solid #e0e0e0;font-size:11px;color:${mCol[mt]};font-weight:700">${mt}</td>`;
+    let rowT=0;sDates.forEach(d=>{let dayV=0;atsS.forEach(n=>{const data=m[n+'|'+d];if(data)dayV+=(data[mKey2[mt]]||0)});rowT+=dayV;h+=`<td class="hm">${dayV||''}</td>`});
+    h+=`<td class="hm" style="background:#e8e8e8;font-weight:800">${rowT}</td></tr>`;
+  });
+  h+=`</tbody></table></div>`;
 
-  // Why no contract
-  const noContract=soV.filter(r=>!fisY(fgContract(r)));
-  const reasons={};
-  noContract.forEach(r=>{const w=fgWhyNoDocs(r);if(w&&w.trim()&&!['n/a','na','-','none',''].includes(w.trim().toLowerCase()))reasons[w.trim()]=(reasons[w.trim()]||0)+1});
-  const rSorted=Object.entries(reasons).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  if(rSorted.length){
-    const tot=noContract.length||1;
-    html+=`<div class="fo-card"><div class="fo-card-h"><h3>Reasons No Contract</h3></div><div class="fo-card-p"><div class="fo-rlist">`+rSorted.map(([r,cnt])=>{const pct=Math.round(cnt/tot*100);return '<div class="fo-ritem"><span class="fo-rpct" style="color:#c5221f">'+pct+'%</span><div class="fo-rbar" style="width:'+Math.max(pct*1.5,4)+'px;background:#c5221f"></div><span class="fo-rtxt">'+r+' <span style="color:#999">('+cnt+')</span></span></div>';}).join('')+`</div></div></div>`;
+  if(reasonsList.length){
+    h+=`<div style="margin-top:12px"><div style="font-size:10px;color:#999;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Rejection Reasons (${reasonsList.length})</div>`;
+    h+=`<div class="tbl-wrap"><table><tr><th style="text-align:left">ATS</th><th style="text-align:left">Store</th><th style="text-align:left">Reason</th><th>Date</th></tr>`;
+    reasonsList.forEach(({ats,store,reason,date})=>{h+=`<tr><td style="font-weight:500">${ats}</td><td>${store}</td><td><span class="fo-miss">${reason}</span></td><td class="hm" style="font-size:11px">${date}</td></tr>`});
+    h+=`</table></div></div>`;
   }
-
-  document.getElementById('fo-s4').innerHTML=html;
+  document.getElementById('fo-s4').innerHTML=h;
 }
 
-// ═══ S5: Form Details Explorer ═══
-function foS5_Explorer(D,vis,sod,eod,allD,allN){
-  const purposes=[...new Set(vis.map(fgP).filter(Boolean))].sort();
-  const formTypes=['ALL','STORE VISIT','START OF THE DAY','END OF THE DAY'];
-  const names=[...new Set(D.map(fgN).filter(Boolean))].sort();
-  const dates=[...new Set(D.map(r=>fsd(fgT(r))).filter(Boolean))].sort().reverse();
-
-  let html=`<div class="fo-card"><div class="fo-card-h"><h3>Browse Form Submissions</h3></div><div class="fo-card-p">
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-      <select id="foExpForm" onchange="foExpFilter()" style="padding:5px 8px;border:1px solid #e0e0e0;border-radius:4px;font-size:11px;font-family:inherit">
-        <option value="ALL">All Forms</option>${formTypes.slice(1).map(f=>'<option value="'+f+'">'+f+'</option>').join('')}
-      </select>
-      <select id="foExpPurpose" onchange="foExpFilter()" style="padding:5px 8px;border:1px solid #e0e0e0;border-radius:4px;font-size:11px;font-family:inherit">
-        <option value="ALL">All Purposes</option>${purposes.map(p=>'<option value="'+p+'">'+p+'</option>').join('')}
-      </select>
-      <select id="foExpDate" onchange="foExpFilter()" style="padding:5px 8px;border:1px solid #e0e0e0;border-radius:4px;font-size:11px;font-family:inherit">
-        <option value="ALL">All Dates</option>${dates.map(d=>'<option value="'+d+'">'+fff(d)+'</option>').join('')}
-      </select>
-      <select id="foExpName" onchange="foExpFilter()" style="padding:5px 8px;border:1px solid #e0e0e0;border-radius:4px;font-size:11px;font-family:inherit">
-        <option value="ALL">All ATS</option>${names.map(n=>'<option value="'+n+'">'+n+'</option>').join('')}
-      </select>
-      <span id="foExpCount" style="font-size:11px;color:#999;align-self:center">0 records</span>
-    </div>
-    <div id="foExpList" style="max-height:500px;overflow-y:auto"></div>
-  </div></div>`;
-  document.getElementById('fo-s5').innerHTML=html;
-  window.foExpFilter();
+/* ═══ S7: Competitors & Segmentation — SVG Pie charts with type filter ═══ */
+function foS7_Segmentation(rows,act,react,port,so){
+  const pieColors=['#4e79a7','#f28e2b','#59a14f','#e15759','#76b7b2','#edc948','#b07aa1','#ff9da7','#9c755f','#bab0ac','#6a9e3f','#d4a0a0'];
+  let h=`<div style="margin-bottom:12px"><select id="s7filter" style="padding:4px 24px 4px 8px;font-size:11px;border:1px solid #e0e0e0;border-radius:3px;background:#fff;color:#333;cursor:pointer;font-family:inherit">`;
+  h+=`<option value="all">All Visit Types</option><option value="Activation">Activation</option><option value="Reactivation">Reactivation</option><option value="Portfolio">Portfolio</option><option value="Store Opening">Store Opening</option>`;
+  h+=`</select></div><div id="fo-s7-pies"></div>`;
+  document.getElementById('fo-s7').innerHTML=h;
+  window._foS7={rows,act,react,port,so,pieColors};
+  document.getElementById('s7filter').onchange=()=>foS7draw();
+  foS7draw();
 }
 
-window.foExpFilter=function(){
-  const form=document.getElementById('foExpForm').value;
-  const purpose=document.getElementById('foExpPurpose').value;
-  const date=document.getElementById('foExpDate').value;
-  const name=document.getElementById('foExpName').value;
-  let rows=FO_R.slice();
-  if(form!=='ALL')rows=rows.filter(r=>fgF(r)===form);
-  if(purpose!=='ALL')rows=rows.filter(r=>fgP(r)===purpose);
-  if(date!=='ALL')rows=rows.filter(r=>fsd(fgT(r))===date);
-  if(name!=='ALL')rows=rows.filter(r=>fgN(r)===name);
-  document.getElementById('foExpCount').textContent=rows.length+' records';
-  const show=rows.slice(0,50);
-  let uid=0;
-  const html=show.length?show.map(r=>{
-    const id='foex'+(uid++);
-    const formType=fgF(r);const nm=fgN(r);const dt=ffd(fgT(r));const purp=fgP(r);
-    const store=fgStore(r)||fgStoreName60(r)||'';
-    let tag='',tagCol='#4e79a7',tagBg='#e8f0fe';
-    if(formType==='START OF THE DAY'){tag='SOD';tagCol='#7b1fa2';tagBg='#f3e8fd';}
-    else if(formType==='END OF THE DAY'){tag='EOD';tagCol='#e37400';tagBg='#fef3e0';}
-    else{tag=purp||'Visit';tagCol=fisAct(r)?'#4e79a7':fisReact(r)?'#f28e2b':fisSO(r)?'#e15759':'#59a14f';tagBg=fisAct(r)?'#e8f0fe':fisReact(r)?'#fef3e0':fisSO(r)?'#fde8e8':'#e6f4ee';}
-    return `<div class="fo-acard"><span class="fo-atag" style="background:${tagBg};color:${tagCol}">${tag}</span><div class="fo-abody"><strong>${nm}</strong>${store?' — '+store:''}<div class="fo-asub">${dt}${purp?' · '+purp:''}</div><button class="fo-aexpand" onclick="foToggleDetail('${id}')">📋 View full form</button>${foFormDetail(r,id)}</div></div>`;
-  }).join(''):'<p style="color:#999;font-size:11px">No records match filters.</p>';
-  document.getElementById('foExpList').innerHTML=html+(rows.length>50?'<p style="color:#999;font-size:10px;margin-top:8px">Showing 50 of '+rows.length+'</p>':'');
-};
-window.foToggleDetail=function(id){document.getElementById(id).classList.toggle('open')};
-function foFormDetail(row,uid){
-  const skip=['ID','Email','Last modified time','Photo'];
-  const keys=Object.keys(row).filter(k=>!skip.some(s=>k.includes(s))&&row[k]!==''&&row[k]!==null&&row[k]!==undefined);
-  let h='<div class="fo-adetails" id="'+uid+'">';
-  keys.forEach(k=>{let v=String(row[k]).slice(0,300);h+='<div class="fo-afield"><span class="fo-afk">'+k.replace(/\n/g,' ').slice(0,80)+'</span><span class="fo-afv">'+v+'</span></div>';});
-  return h+'</div>';
+function foS7draw(){
+  const {rows,act,react,port,so,pieColors}=window._foS7;
+  const sel=document.getElementById('s7filter').value;
+  let compSets=[],salesSets=[],catSets=[];
+  if(sel==='all'||sel==='Activation'){compSets.push({list:act,fn:fg.actComp});salesSets.push({list:act,fn:fg.actSales})}
+  if(sel==='all'||sel==='Reactivation'){compSets.push({list:react,fn:fg.reactComp})}
+  if(sel==='all'||sel==='Portfolio'){compSets.push({list:port,fn:fg.portComp})}
+  if(sel==='all'||sel==='Store Opening'){compSets.push({list:so,fn:fg.soComp});salesSets.push({list:so,fn:fg.soSales});catSets.push({list:so,fn:fg.soCategory})}
+
+  const comps={};let compV=0;
+  compSets.forEach(({list,fn})=>{list.forEach(r=>{compV++;const v=fn(r);if(v)(v).split(';').forEach(c=>{c=c.trim();if(c&&!/^none$/i.test(c))comps[c]=(comps[c]||0)+1})})});
+  const sales={};salesSets.forEach(({list,fn})=>{list.forEach(r=>{const v=fn(r);if(v)sales[v]=(sales[v]||0)+1})});
+  const cats={};catSets.forEach(({list,fn})=>{list.forEach(r=>{const c=fn(r).trim();if(c)cats[c]=(cats[c]||0)+1})});
+
+  let h='';
+  if(Object.keys(comps).length)h+=foPieCard('Competitor Presence',comps,pieColors,`from ${compV} visits`);
+  else h+=`<div class="fo-card"><div class="fo-card-h"><h3>Competitor Presence</h3></div><div class="fo-card-p" style="padding:20px;color:#999;font-size:12px">No competitor data.</div></div>`;
+
+  const totalSales=Object.values(sales).reduce((a,b)=>a+b,0);
+  if(totalSales){const sO=['0-100,000','100,000-200,000','200,000-300,000','300,000-500,000','500,000-1,000,000','1,000,000+'];const oS={};sO.forEach(s=>{if(sales[s])oS[s]=sales[s]});Object.keys(sales).forEach(s=>{if(!sO.includes(s))oS[s]=sales[s]});h+=foPieCard('Monthly Sales Volume',oS,pieColors,`from ${totalSales} visits`)}
+  else if(sel==='all'||sel==='Activation'||sel==='Store Opening')h+=`<div class="fo-card"><div class="fo-card-h"><h3>Monthly Sales Volume</h3></div><div class="fo-card-p" style="padding:20px;color:#999;font-size:12px">No sales data.</div></div>`;
+
+  if(Object.keys(cats).length)h+=foPieCard('Business Category',cats,pieColors,`from ${Object.values(cats).reduce((a,b)=>a+b,0)} stores`);
+  else if(sel==='all'||sel==='Store Opening')h+=`<div class="fo-card"><div class="fo-card-h"><h3>Business Category</h3></div><div class="fo-card-p" style="padding:20px;color:#999;font-size:12px">No category data.</div></div>`;
+
+  document.getElementById('fo-s7-pies').innerHTML=h;
 }
 
-// ═══ S6: Reasons Not Activated / Reactivated ═══
-function foS6_Reasons(actV,reaV){
-  let html='';
-  [{label:'Activation',data:actV},{label:'Reactivation',data:reaV}].forEach(({label,data})=>{
-    const notOk=data.filter(r=>!fisY(fgA(r)));
-    const reasons={};
-    notOk.forEach(r=>{const raw=fgReason(r);if(raw)raw.split(';').filter(Boolean).forEach(s=>{const t=s.trim();if(t&&!['na','none','n/a','-',''].includes(t.toLowerCase()))reasons[t]=(reasons[t]||0)+1})});
-    const sorted=Object.entries(reasons).sort((a,b)=>b[1]-a[1]).slice(0,10);
-    const total=notOk.length||1;
-    const okCnt=data.length-notOk.length;
-    let bH=sorted.length?'<div class="fo-rlist">'+sorted.map(([r,cnt])=>{const pct=Math.round(cnt/total*100);return '<div class="fo-ritem"><span class="fo-rpct" style="color:#c5221f">'+pct+'%</span><div class="fo-rbar" style="width:'+Math.max(pct*1.5,4)+'px;background:#c5221f"></div><span class="fo-rtxt">'+r+' <span style="color:#999">('+cnt+')</span></span></div>';}).join('')+'</div>':'<span style="color:#0d7c5f;font-size:11px">All stores '+label.toLowerCase()+'d ✅</span>';
-    html+=`<div class="fo-card" style="margin-bottom:10px"><div class="fo-card-h"><h3>${label}: ${data.length} visits → ${okCnt} success (${data.length?Math.round(okCnt/data.length*100):0}%)</h3></div><div class="fo-card-p">${bH}</div></div>`;
+function foPieCard(title,data,colors,subtitle){
+  const entries=Object.entries(data).sort((a,b)=>b[1]-a[1]);
+  const total=entries.reduce((s,e)=>s+e[1],0);if(!total)return'';
+  const size=200,cx=100,cy=100,r=90;let angle=-Math.PI/2,paths='',labels='';
+  entries.forEach(([k,v],i)=>{
+    const sweep=(v/total)*2*Math.PI,x1=cx+r*Math.cos(angle),y1=cy+r*Math.sin(angle),x2=cx+r*Math.cos(angle+sweep),y2=cy+r*Math.sin(angle+sweep),large=sweep>Math.PI?1:0,col=colors[i%colors.length];
+    paths+=`<path d="M${cx},${cy} L${x1.toFixed(2)},${y1.toFixed(2)} A${r},${r} 0 ${large},1 ${x2.toFixed(2)},${y2.toFixed(2)} Z" fill="${col}" stroke="#fff" stroke-width="1.5"/>`;
+    const p=Math.round(v/total*100);
+    if(p>=4){const mid=angle+sweep/2,lx=cx+r*0.62*Math.cos(mid),ly=cy+r*0.62*Math.sin(mid);labels+=`<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="12" font-weight="700" font-family="Source Sans 3,sans-serif">${p}%</text>`}
+    angle+=sweep;
   });
-  document.getElementById('fo-s6').innerHTML=html||'<p style="color:#999;font-size:12px">No activation/reactivation visits.</p>';
+  const svg=`<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="flex-shrink:0">${paths}${labels}</svg>`;
+  let leg='';entries.forEach(([k,v],i)=>{const p=Math.round(v/total*100);leg+=`<div style="display:flex;align-items:center;gap:8px;margin:3px 0;font-size:12px;line-height:1.5"><div style="width:12px;height:12px;border-radius:2px;background:${colors[i%colors.length]};flex-shrink:0"></div><span style="font-weight:700;min-width:30px">${p}%</span><span style="color:#333">${k}</span><span style="color:#999">(${v})</span></div>`});
+  const subH=subtitle?`<span style="font-size:11px;color:#999;margin-left:auto">${subtitle}</span>`:'';
+  return `<div class="fo-card" style="margin-bottom:10px"><div class="fo-card-h"><h3>${title}</h3>${subH}</div><div class="fo-card-p" style="display:flex;align-items:center;gap:30px;flex-wrap:wrap;padding:20px">${svg}<div>${leg}</div></div></div>`;
 }
 
-// ═══ S7: Store Segmentation ═══
-function foS7_Segmentation(vis){
-  const sColors=['#4e79a7','#f28e2b','#59a14f','#e15759','#76b7b2','#edc948','#b07aa1','#ff9da7','#9c755f','#bab0ac'];
-  function svgPie(data,tot,cols,sz){const cx=sz/2,cy=sz/2,r=70;let sa=-Math.PI/2,svg='';data.forEach(([l,cnt],i)=>{const p=cnt/tot,ea=sa+p*2*Math.PI,la=p>0.5?1:0;const x1=cx+r*Math.cos(sa),y1=cy+r*Math.sin(sa),x2=cx+r*Math.cos(ea),y2=cy+r*Math.sin(ea);svg+=`<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${la},1 ${x2},${y2} Z" fill="${cols[i%cols.length]}" stroke="#fff" stroke-width="2"><title>${l}: ${cnt} (${Math.round(p*100)}%)</title></path>`;const ma=sa+p*Math.PI,lx=cx+r*0.6*Math.cos(ma),ly=cy+r*0.6*Math.sin(ma);if(p>=0.08)svg+=`<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="10" font-weight="600">${Math.round(p*100)}%</text>`;sa=ea;});return `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}">${svg}</svg>`;}
-  function legend(data,tot,cols){return '<div style="display:flex;flex-direction:column;gap:5px">'+data.map(([l,cnt],i)=>'<span style="font-size:11px;display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:'+cols[i%cols.length]+';display:inline-block"></span><strong>'+Math.round(cnt/tot*100)+'%</strong> '+l+' <span style="color:#999">('+cnt+')</span></span>').join('')+'</div>';}
-
-  const salesCounts={};vis.forEach(r=>{const s=fgSales(r);if(s&&s.trim())salesCounts[s.trim()]=(salesCounts[s.trim()]||0)+1});
-  const salesSorted=Object.entries(salesCounts).sort((a,b)=>b[1]-a[1]);const salesTot=salesSorted.reduce((s,e)=>s+e[1],0);
-  const catCounts={};vis.forEach(r=>{const c=fgCategory(r);if(c&&c.trim())catCounts[c.trim()]=(catCounts[c.trim()]||0)+1});
-  const catSorted=Object.entries(catCounts).sort((a,b)=>b[1]-a[1]);const catTotal=catSorted.reduce((s,e)=>s+e[1],0);
-
-  let html='';
-  if(salesSorted.length){html+=`<div class="fo-card" style="margin-bottom:10px"><div class="fo-card-h"><h3>Monthly Sales Volume</h3></div><div class="fo-card-p"><div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">${svgPie(salesSorted,salesTot,sColors,180)}${legend(salesSorted,salesTot,sColors)}</div></div></div>`;}
-  if(catSorted.length){html+=`<div class="fo-card"><div class="fo-card-h"><h3>Business Category</h3></div><div class="fo-card-p"><div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">${svgPie(catSorted,catTotal,sColors,180)}${legend(catSorted,catTotal,sColors)}</div></div></div>`;}
-  if(!html)html='<p style="color:#999;font-size:12px">No segmentation data.</p>';
-  document.getElementById('fo-s7').innerHTML=html;
-}
-
-// ── Report Modal ──
-window.foShowReport=function(){
-  if(!FO_R.length){alert('Upload Excel first');return;}
-  const allD=[...new Set(FO_R.map(r=>fsd(fgT(r))).filter(Boolean))].sort();
-  const sel=document.getElementById('foReportDate');
-  sel.innerHTML=allD.slice().reverse().map(d=>'<option value="'+d+'">'+fff(d)+'</option>').join('');
-  document.getElementById('foReportModal').classList.add('show');
-  foGenerateReport();
-};
-window.foCloseReport=function(){document.getElementById('foReportModal').classList.remove('show')};
-window.foGenerateReport=function(){
-  const date=document.getElementById('foReportDate').value;
-  if(!date){document.getElementById('foReportText').textContent='Select a date.';return;}
-  const dayRows=FO_R.filter(r=>fsd(fgT(r))===date);
-  let vis,sod,eod;
-  if(FO_MODE==='ATS'){vis=dayRows.filter(r=>fgF(r)==='STORE VISIT');sod=dayRows.filter(r=>fgF(r)==='START OF THE DAY');eod=dayRows.filter(r=>fgF(r)==='END OF THE DAY');}
-  else{vis=dayRows;sod=[];eod=[];}
-  const act=vis.filter(fisAct),react=vis.filter(fisReact),port=vis.filter(fisPort),so=vis.filter(fisSO);
-  const actY=act.filter(r=>fisY(fgA(r))).length,reactY=react.filter(r=>fisY(fgA(r))).length;
-  const soC=so.filter(r=>fisY(fgContract(r))).length;
-  const totApps=vis.reduce((s,r)=>s+(parseInt(fgAp(r))||0),0),totOffer=vis.reduce((s,r)=>s+(parseInt(fgOf(r))||0),0);
-  const names=[...new Set(dayRows.map(fgN).filter(Boolean))].sort();
-  const newRAs=eod.reduce((s,r)=>s+(parseInt(fgNR(r))||0),0);
-  const d=new Date(date),dayName=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()];
-  let t=`📊 ALDI ATS Daily Report\n📅 ${dayName}, ${fff(date)}\n${'─'.repeat(32)}\n\n`;
-  t+=`📝 Total Forms: ${dayRows.length}\n   • SOD: ${sod.length}\n   • Visits: ${vis.length}\n   • EOD: ${eod.length}\n\n`;
-  t+=`🏪 By Type:\n   • Activation: ${act.length}${act.length?' → '+actY+' activated ('+Math.round(actY/act.length*100)+'%)':''}\n   • Reactivation: ${react.length}${react.length?' → '+reactY+' reactivated ('+Math.round(reactY/react.length*100)+'%)':''}\n   • Portfolio: ${port.length}\n   • Store Opening: ${so.length}${so.length?' → '+soC+' contracts':''}\n\n`;
-  t+=`📈 Offer→App: ${totApps}/${totOffer} (${totOffer?Math.round(totApps/totOffer*100):0}%)\n`;
-  if(newRAs)t+=`👥 New RAs: ${newRAs}\n`;
-  t+=`\n👥 Activity:\n`;
-  names.forEach(name=>{const nv=vis.filter(r=>fgN(r)===name),na=nv.filter(fisAct),nr=nv.filter(fisReact),ns=nv.filter(fisSO);const naY=na.filter(r=>fisY(fgA(r))).length,nrY=nr.filter(r=>fisY(fgA(r))).length,nsC=ns.filter(r=>fisY(fgContract(r))).length;t+=`   ${name}: ${nv.length} vis`;const p=[];if(na.length)p.push(`${na.length} act (${naY}✓)`);if(nr.length)p.push(`${nr.length} react (${nrY}✓)`);if(ns.length)p.push(`${ns.length} SO (${nsC}✍)`);if(p.length)t+=` — ${p.join(', ')}`;t+='\n';});
-  document.getElementById('foReportText').textContent=t;
-};
-window.foCopyReport=function(){
-  navigator.clipboard.writeText(document.getElementById('foReportText').textContent).then(()=>{
-    document.getElementById('foCopyBtn').textContent='✓ Copied!';
-    setTimeout(()=>{document.getElementById('foCopyBtn').textContent='📋 Copy to Clipboard'},2000);
-  });
-};
 })();
 
 go('bizmetrics');
+
 
 </script>
 </body>
