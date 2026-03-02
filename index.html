@@ -157,7 +157,7 @@ tr:hover .bm-c1,tr:hover .bm-c2{background:#f0f4fa}
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="13" width="4" height="9" fill="#fff" opacity=".9"/><rect x="8" y="8" width="4" height="14" fill="#fff" opacity=".7"/><rect x="14" y="4" width="4" height="18" fill="#fff" opacity=".9"/><rect x="20" y="1" width="4" height="21" fill="#fff" opacity=".7"/></svg>
     <h1>NCR Pilot BM Check</h1><span class="sub">Pilot Group vs Other NCR Team</span>
   </div>
-  <div class="dt">Updated: Sep 01 – Feb 23 (updated Feb 28, 09:41)</div>
+  <div class="dt">Updated: Sep 01 – Feb 23 (updated Mar 02, 11:54)</div>
 </div>
 
 <div class="tabs" id="tabs">
@@ -1174,7 +1174,6 @@ const fofc=(r,f)=>{const k=Object.keys(r).find(k=>k.toLowerCase().includes(f.toL
 const fofk=(r,test)=>{const k=Object.keys(r).find(test);return k?r[k]:''};
 const fonum=v=>{const n=parseInt(v);return isNaN(n)?0:n};
 const fopct=(a,b)=>b?Math.round(a/b*100):0;
-const fobadge=(v)=>v>=70?'fo-ok':v>=40?'fo-warn':'fo-miss';
 
 /* Column accessors for v2 form */
 const fg={
@@ -1182,6 +1181,7 @@ const fg={
   store:r=>fofc(r,'Store name')||'',
   type:r=>fofc(r,'type of visit')||'',
   start:r=>fofc(r,'Start time')||'',
+  end:r=>fofc(r,'Completion time')||'',
   actSales:r=>fofc(r,'Store monthly sales overall')||'',
   actComp:r=>fofk(r,k=>/^competitors visible in store\?$/i.test(k.trim()))||'',
   actChecklist:r=>fofc(r,'Activation store readiness checklist')||'',
@@ -1191,7 +1191,10 @@ const fg={
   reactComp:r=>fofk(r,k=>/^competitors visibility\u00a0$/i.test(k))||'',
   reactReason:r=>fofc(r,'Reason store became inactive')||'',
   reactChecklist:r=>fofc(r,'Reactivation store readiness checklist')||'',
+  reactNotReady:r=>fofc(r,'not ready, what needs')||'',
   reactMarketing:r=>fofk(r,k=>/^marketing materials installed/i.test(k.trim()))||'',
+  reactAttention:r=>fofc(r,'What needs attention')||'',
+  reactReady:r=>fofk(r,k=>/^store is fully ready to process the loans$/i.test(k.trim()))||'',
   reactSuccess:r=>{const v=fofc(r,'reactivated by loan');return typeof v==='string'?v.trim():String(v||'')},
   portComp:r=>fofk(r,k=>/^competitors visibility\u00a01$/i.test(k))||'',
   portChecklist:r=>fofc(r,'Portfolio store checklist readiness')||'',
@@ -1203,6 +1206,7 @@ const fg={
   soWhyNo:r=>fofc(r,'explain why1')||'',
   soDocs:r=>fofc(r,'All documents collected')||'',
   soPhone:r=>fofc(r,"owner phone")||'',
+  whoPresent:r=>fofc(r,'Who is present')||'',
   offered:r=>fofc(r,'offered Salmon loan')||'',
   attempted:r=>fofc(r,'applications were attempted')||'',
   possibleRAs:r=>fofc(r,'possible RAs')||'',
@@ -1212,17 +1216,21 @@ const fg={
 };
 
 function foDateKey(r){
-  const d=fg.start(r);
-  if(!d)return'';
+  const d=fg.start(r);if(!d)return'';
   if(d instanceof Date)return d.toISOString().slice(0,10);
   const s=String(d);
-  const iso=s.match(/(\d{4}-\d{2}-\d{2})/);
-  if(iso)return iso[1];
+  const iso=s.match(/(\d{4}-\d{2}-\d{2})/);if(iso)return iso[1];
   const mdy=s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
   if(mdy)return `${mdy[3]}-${mdy[1].padStart(2,'0')}-${mdy[2].padStart(2,'0')}`;
   return s.slice(0,10);
 }
-const foShortDate=d=>{const[y,mm,dd]=d.split('-');return['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(mm)-1]+' '+parseInt(dd)};
+const foDayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function foDateLabel(d){
+  const[y,mm,dd]=d.split('-');
+  const dt=new Date(d+'T12:00:00Z');
+  const day=foDayNames[dt.getUTCDay()];
+  return `<div style="font-size:8px;color:#999;line-height:1">${day}</div>${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(mm)-1]} ${parseInt(dd)}`;
+}
 
 /* ── File handling ── */
 const foUB=document.getElementById('foUpB'),foFI=document.getElementById('foFIn'),foRI=document.getElementById('foRIn');
@@ -1250,82 +1258,53 @@ function foLd(f){
 /* ═══ MAIN ═══ */
 function foGo(){
   try{
-  const rows=FO_R;
-  if(!rows.length)return;
+  const rows=FO_R;if(!rows.length)return;
   const dates=[...new Set(rows.map(foDateKey))].filter(d=>d).sort();
   const ats=[...new Set(rows.map(r=>fg.name(r)))].filter(n=>n).sort();
   const act=rows.filter(r=>fg.type(r)==='Activation');
   const react=rows.filter(r=>fg.type(r)==='Reactivation');
   const port=rows.filter(r=>fg.type(r)==='Portfolio');
   const so=rows.filter(r=>fg.type(r)==='Store Opening');
-
   foS1_Daily(rows,ats,dates);
-  foS2_Activation(act,ats,dates);
-  foS3_Reactivation(react,ats,dates);
-  foS4_StoreOpening(so,ats,dates);
+  foS2_Activation(act);
+  foS3_Reactivation(react);
+  foS4_StoreOpening(so);
   foS7_Segmentation(rows,act,react,port,so);
   }catch(e){console.error('foGo():',e);alert('Field Ops error: '+e.message);}
 }
 
-/* ═══ BM-style table builder ═══ */
-function foBMTable(targetId,subsetRows,allDatesOverride,metricsConfig){
-  const {metrics,mCol,mKey,getData,highlightMetric,highlightColor}=metricsConfig;
-  if(!subsetRows.length){document.getElementById(targetId).innerHTML='<p style="color:#999;font-size:12px">No visits.</p>';return}
-
-  const atsInSubset=[...new Set(subsetRows.map(r=>fg.name(r)))].filter(n=>n).sort();
-  const datesInSubset=allDatesOverride||[...new Set(subsetRows.map(foDateKey))].filter(d=>d).sort();
-
+/* ═══ Shared: BM-style table builder ═══ */
+function foBMTable(targetId,subsetRows,cfg){
+  const {metrics,mCol,mKey,getData,highlightMetric,highlightColor}=cfg;
+  if(!subsetRows.length){document.getElementById(targetId).innerHTML='<p style="color:#999;font-size:12px">No visits.</p>';return null}
+  const atsIn=[...new Set(subsetRows.map(r=>fg.name(r)))].filter(n=>n).sort();
+  const datesIn=[...new Set(subsetRows.map(foDateKey))].filter(d=>d).sort();
   const m={};
-  subsetRows.forEach(r=>{
-    const n=fg.name(r),d=foDateKey(r);
-    if(!n||!d)return;
-    const key=n+'|'+d;
-    if(!m[key])m[key]={};
-    getData(r,m[key]);
-  });
+  subsetRows.forEach(r=>{const n=fg.name(r),d=foDateKey(r);if(!n||!d)return;const key=n+'|'+d;if(!m[key])m[key]={};getData(r,m[key])});
 
   let h=`<div class="tbl-wrap" style="max-height:70vh;overflow:auto"><table style="border-collapse:separate;border-spacing:0">`;
   h+=`<thead><tr style="position:sticky;top:0;z-index:10"><th style="text-align:left;position:sticky;left:0;z-index:12;background:#f0f0f0;min-width:160px;border-right:1px solid #e0e0e0">ATS</th>`;
   h+=`<th style="position:sticky;left:160px;z-index:12;background:#f0f0f0;min-width:130px;border-right:1px solid #e0e0e0;text-align:left">Metric</th>`;
-  datesInSubset.forEach(d=>{h+=`<th class="hm" style="background:#f0f0f0;min-width:50px">${foShortDate(d)}</th>`});
-  h+=`<th class="hm" style="font-weight:800;background:#e8e8e8">Σ</th></tr></thead><tbody>`;
+  datesIn.forEach(d=>{h+=`<th class="hm" style="background:#f0f0f0;min-width:56px">${foDateLabel(d)}</th>`});
+  h+=`</tr></thead><tbody>`;
 
-  atsInSubset.forEach((n,ai)=>{
-    const bgGroup=ai%2===0?'#fff':'#fafafa';
+  /* Grand Total row at top */
+  h+=`<tr style="background:#f7f7f7;border-bottom:2px solid #ccc"><td style="font-weight:700;position:sticky;left:0;z-index:2;background:#f7f7f7;border-right:none">Grand Total</td>`;
+  h+=`<td style="position:sticky;left:160px;z-index:2;background:#f7f7f7;border-right:1px solid #e0e0e0;font-size:11px;font-weight:700;color:#333">Visits</td>`;
+  datesIn.forEach(d=>{let dv=0;atsIn.forEach(n=>{const data=m[n+'|'+d];if(data)dv+=(data[mKey[metrics[0]]]||0)});h+=`<td class="hm" style="font-weight:700;background:#f7f7f7">${dv||''}</td>`});
+  h+=`</tr>`;
+
+  atsIn.forEach((n,ai)=>{
+    const bg=ai%2===0?'#fff':'#fafafa';
     metrics.forEach((mt,mi)=>{
-      h+=`<tr style="background:${bgGroup}">`;
-      if(mi===0){
-        h+=`<td rowspan="${metrics.length}" style="font-weight:600;white-space:nowrap;position:sticky;left:0;z-index:2;background:${bgGroup};border-right:none;vertical-align:top;padding-top:10px;border-bottom:1px solid #ddd">${n}</td>`;
-      }
-      h+=`<td style="position:sticky;left:160px;z-index:2;background:${bgGroup};border-right:1px solid #e0e0e0;font-size:11px;color:${mCol[mt]};font-weight:500;white-space:nowrap;box-shadow:2px 0 4px rgba(0,0,0,0.04);${mi===metrics.length-1?'border-bottom:1px solid #ddd;':''}">${mt}</td>`;
-      let rowT=0;
-      datesInSubset.forEach(d=>{
-        const data=m[n+'|'+d];
-        const v=data?(data[mKey[mt]]||0):0;
-        rowT+=v;
-        const isHL=mt===highlightMetric&&v>0;
-        h+=`<td class="hm" style="font-size:11px;${isHL?'color:'+highlightColor+';font-weight:700;':''}${mi===metrics.length-1?'border-bottom:1px solid #ddd;':''}">${v||'<span style=\"color:#ddd\">·</span>'}</td>`;
-      });
-      const isHL=mt===highlightMetric&&rowT>0;
-      h+=`<td class="hm" style="font-weight:600;background:#f5f5f5;${isHL?'color:'+highlightColor+';':''}${mi===metrics.length-1?'border-bottom:1px solid #ddd;':''}">${rowT||''}</td></tr>`;
+      h+=`<tr style="background:${bg}">`;
+      if(mi===0) h+=`<td rowspan="${metrics.length}" style="font-weight:600;white-space:nowrap;position:sticky;left:0;z-index:2;background:${bg};border-right:none;vertical-align:top;padding-top:10px;border-bottom:1px solid #ddd">${n}</td>`;
+      h+=`<td style="position:sticky;left:160px;z-index:2;background:${bg};border-right:1px solid #e0e0e0;font-size:11px;color:${mCol[mt]};font-weight:500;white-space:nowrap;box-shadow:2px 0 4px rgba(0,0,0,0.04);${mi===metrics.length-1?'border-bottom:1px solid #ddd;':''}">${mt}</td>`;
+      datesIn.forEach(d=>{const data=m[n+'|'+d];const v=data?(data[mKey[mt]]||0):0;const isHL=mt===highlightMetric&&v>0;
+        h+=`<td class="hm" style="font-size:11px;${isHL?'color:'+highlightColor+';font-weight:700;':''}${mi===metrics.length-1?'border-bottom:1px solid #ddd;':''}">${v||'<span style=\"color:#ddd\">·</span>'}</td>`});
+      h+=`</tr>`;
     });
   });
-
-  /* Grand Total */
-  metrics.forEach((mt,mi)=>{
-    h+=`<tr class="fo-rt">`;
-    if(mi===0) h+=`<td rowspan="${metrics.length}" style="font-weight:700;position:sticky;left:0;z-index:2;background:#f0f0f0;border-right:none;vertical-align:top;padding-top:8px">Total</td>`;
-    h+=`<td style="position:sticky;left:160px;z-index:2;background:#f0f0f0;border-right:1px solid #e0e0e0;font-size:11px;color:${mCol[mt]};font-weight:700">${mt}</td>`;
-    let rowT=0;
-    datesInSubset.forEach(d=>{
-      let dayV=0;
-      atsInSubset.forEach(n=>{const data=m[n+'|'+d];if(data)dayV+=(data[mKey[mt]]||0)});
-      rowT+=dayV;
-      h+=`<td class="hm">${dayV||''}</td>`;
-    });
-    h+=`<td class="hm" style="background:#e8e8e8;font-weight:800">${rowT}</td></tr>`;
-  });
-
   h+=`</tbody></table></div>`;
   return h;
 }
@@ -1335,38 +1314,37 @@ function foS1_Daily(rows,ats,dates){
   const types=['Activation','Reactivation','Portfolio','Store Opening'];
   const tCol={Activation:'#e65100',Reactivation:'#7b1fa2',Portfolio:'#4e79a7','Store Opening':'#0d7c5f'};
   const m={};
-  rows.forEach(r=>{const n=fg.name(r),d=foDateKey(r),t=fg.type(r);if(!n||!d||!t)return;const k=n+'|'+d+'|'+t;m[k]=(m[k]||0)+1});
+  rows.forEach(r=>{const n=fg.name(r),d=foDateKey(r),t=fg.type(r);if(!n||!d||!t)return;m[n+'|'+d+'|'+t]=(m[n+'|'+d+'|'+t]||0)+1});
 
   let h=`<div class="tbl-wrap" style="max-height:70vh;overflow:auto"><table style="border-collapse:separate;border-spacing:0">`;
   h+=`<thead><tr style="position:sticky;top:0;z-index:10"><th style="text-align:left;position:sticky;left:0;z-index:12;background:#f0f0f0;min-width:160px;border-right:1px solid #e0e0e0">ATS</th>`;
   h+=`<th style="position:sticky;left:160px;z-index:12;background:#f0f0f0;min-width:130px;border-right:1px solid #e0e0e0;text-align:left">Metric</th>`;
-  dates.forEach(d=>{h+=`<th class="hm" style="background:#f0f0f0;min-width:50px">${foShortDate(d)}</th>`});
-  h+=`<th class="hm" style="font-weight:800;background:#e8e8e8">Σ</th></tr></thead><tbody>`;
+  dates.forEach(d=>{h+=`<th class="hm" style="background:#f0f0f0;min-width:56px">${foDateLabel(d)}</th>`});
+  h+=`</tr></thead><tbody>`;
+
+  /* Grand Total row at top */
+  h+=`<tr style="background:#f7f7f7;border-bottom:2px solid #ccc"><td style="font-weight:700;position:sticky;left:0;z-index:2;background:#f7f7f7;border-right:none">Grand Total</td>`;
+  h+=`<td style="position:sticky;left:160px;z-index:2;background:#f7f7f7;border-right:1px solid #e0e0e0;font-size:11px;font-weight:700;color:#333">All Visits</td>`;
+  dates.forEach(d=>{const dayT=rows.filter(r=>fg.name(r)&&foDateKey(r)===d).length;h+=`<td class="hm" style="font-weight:700;background:#f7f7f7">${dayT||''}</td>`});
+  h+=`</tr>`;
 
   ats.forEach((n,ai)=>{
-    const bgGroup=ai%2===0?'#fff':'#fafafa';
+    const bg=ai%2===0?'#fff':'#fafafa';
     types.forEach((t,ti)=>{
-      h+=`<tr style="background:${bgGroup}">`;
-      if(ti===0) h+=`<td rowspan="${types.length}" style="font-weight:600;white-space:nowrap;position:sticky;left:0;z-index:2;background:${bgGroup};border-right:none;vertical-align:top;padding-top:10px;border-bottom:1px solid #ddd">${n}</td>`;
-      h+=`<td style="position:sticky;left:160px;z-index:2;background:${bgGroup};border-right:1px solid #e0e0e0;font-size:11px;color:${tCol[t]};font-weight:500;white-space:nowrap;box-shadow:2px 0 4px rgba(0,0,0,0.04);${ti===types.length-1?'border-bottom:1px solid #ddd;':''}">${t}</td>`;
-      let rowT=0;
-      dates.forEach(d=>{const v=m[n+'|'+d+'|'+t]||0;rowT+=v;h+=`<td class="hm" style="font-size:11px;${ti===types.length-1?'border-bottom:1px solid #ddd;':''}">${v||'<span style=\"color:#ddd\">·</span>'}</td>`});
-      h+=`<td class="hm" style="font-weight:600;background:#f5f5f5;${ti===types.length-1?'border-bottom:1px solid #ddd;':''}">${rowT||''}</td></tr>`;
+      h+=`<tr style="background:${bg}">`;
+      if(ti===0) h+=`<td rowspan="${types.length}" style="font-weight:600;white-space:nowrap;position:sticky;left:0;z-index:2;background:${bg};border-right:none;vertical-align:top;padding-top:10px;border-bottom:1px solid #ddd">${n}</td>`;
+      h+=`<td style="position:sticky;left:160px;z-index:2;background:${bg};border-right:1px solid #e0e0e0;font-size:11px;color:${tCol[t]};font-weight:500;white-space:nowrap;box-shadow:2px 0 4px rgba(0,0,0,0.04);${ti===types.length-1?'border-bottom:1px solid #ddd;':''}">${t}</td>`;
+      dates.forEach(d=>{const v=m[n+'|'+d+'|'+t]||0;h+=`<td class="hm" style="font-size:11px;${ti===types.length-1?'border-bottom:1px solid #ddd;':''}">${v||'<span style=\"color:#ddd\">·</span>'}</td>`});
+      h+=`</tr>`;
     });
   });
-  /* Grand Total */
-  h+=`<tr class="fo-rt"><td style="font-weight:700;position:sticky;left:0;z-index:2;background:#f0f0f0;border-right:none">Total</td>`;
-  h+=`<td style="position:sticky;left:160px;z-index:2;background:#f0f0f0;border-right:1px solid #e0e0e0;font-size:11px;font-weight:700">All</td>`;
-  let grandTotal=0;
-  dates.forEach(d=>{const dayT=rows.filter(r=>fg.name(r)&&foDateKey(r)===d).length;grandTotal+=dayT;h+=`<td class="hm" style="font-weight:700">${dayT||''}</td>`});
-  h+=`<td class="hm" style="background:#e8e8e8;font-weight:800">${grandTotal}</td></tr>`;
   h+=`</tbody></table></div>`;
   document.getElementById('fo-s1').innerHTML=h;
 }
 
 /* ═══ S2: Activation Tracker ═══ */
 function foS2_Activation(act){
-  const h=foBMTable('fo-s2',act,null,{
+  const h=foBMTable('fo-s2',act,{
     metrics:['Visits','Offered','Attempted','Activated'],
     mCol:{Visits:'#4a4a4a',Offered:'#4e79a7',Attempted:'#e65100',Activated:'#0d7c5f'},
     mKey:{Visits:'Visits',Offered:'Offered',Attempted:'Attempted',Activated:'Activated'},
@@ -1378,7 +1356,7 @@ function foS2_Activation(act){
 
 /* ═══ S3: Reactivation Tracker ═══ */
 function foS3_Reactivation(react){
-  const h=foBMTable('fo-s3',react,null,{
+  const h=foBMTable('fo-s3',react,{
     metrics:['Visits','Offered','Attempted','Reactivated'],
     mCol:{Visits:'#4a4a4a',Offered:'#4e79a7',Attempted:'#e65100',Reactivated:'#7b1fa2'},
     mKey:{Visits:'Visits',Offered:'Offered',Attempted:'Attempted',Reactivated:'Reactivated'},
@@ -1388,23 +1366,14 @@ function foS3_Reactivation(react){
   if(h)document.getElementById('fo-s3').innerHTML=h;
 }
 
-/* ═══ S4: Store Opening Tracker ═══ */
+/* ═══ S4: Store Opening Tracker + Rejection Explorer ═══ */
 function foS4_StoreOpening(so){
   if(!so.length){document.getElementById('fo-s4').innerHTML='<p style="color:#999;font-size:12px">No Store Opening visits.</p>';return}
   const hasPhone=v=>{if(!v)return false;return String(v).replace(/\D/g,'').length>=7};
-
   const atsS=[...new Set(so.map(r=>fg.name(r)))].filter(n=>n).sort();
   const sDates=[...new Set(so.map(foDateKey))].filter(d=>d).sort();
-  const m={};const reasonsList=[];
-  so.forEach(r=>{
-    const n=fg.name(r),d=foDateKey(r);if(!n||!d)return;
-    const key=n+'|'+d;
-    if(!m[key])m[key]={Visits:0,Phone:0,Contract:0};
-    m[key].Visits++;
-    if(hasPhone(fg.soPhone(r)))m[key].Phone++;
-    if(fg.soContract(r)==='Yes')m[key].Contract++;
-    if(fg.soContract(r)!=='Yes'){const why=fg.soWhyNo(r);if(why)reasonsList.push({ats:n,date:d,store:fg.store(r),reason:why})}
-  });
+  const m={};
+  so.forEach(r=>{const n=fg.name(r),d=foDateKey(r);if(!n||!d)return;const key=n+'|'+d;if(!m[key])m[key]={Visits:0,Phone:0,Contract:0};m[key].Visits++;if(hasPhone(fg.soPhone(r)))m[key].Phone++;if(fg.soContract(r)==='Yes')m[key].Contract++});
 
   const metrics=['Visits','Phone Collected','Contract Signed'];
   const mCol={'Visits':'#4a4a4a','Phone Collected':'#4e79a7','Contract Signed':'#0d7c5f'};
@@ -1413,78 +1382,86 @@ function foS4_StoreOpening(so){
   let h=`<div class="tbl-wrap" style="max-height:70vh;overflow:auto"><table style="border-collapse:separate;border-spacing:0">`;
   h+=`<thead><tr style="position:sticky;top:0;z-index:10"><th style="text-align:left;position:sticky;left:0;z-index:12;background:#f0f0f0;min-width:160px;border-right:1px solid #e0e0e0">ATS</th>`;
   h+=`<th style="position:sticky;left:160px;z-index:12;background:#f0f0f0;min-width:130px;border-right:1px solid #e0e0e0;text-align:left">Metric</th>`;
-  sDates.forEach(d=>{h+=`<th class="hm" style="background:#f0f0f0;min-width:50px">${foShortDate(d)}</th>`});
-  h+=`<th class="hm" style="font-weight:800;background:#e8e8e8">Σ</th></tr></thead><tbody>`;
-
+  sDates.forEach(d=>{h+=`<th class="hm" style="background:#f0f0f0;min-width:56px">${foDateLabel(d)}</th>`});
+  h+=`</tr></thead><tbody>`;
+  /* Grand Total */
+  h+=`<tr style="background:#f7f7f7"><td style="font-weight:700;position:sticky;left:0;z-index:2;background:#f7f7f7;border-right:none">Grand Total</td>`;
+  h+=`<td style="position:sticky;left:160px;z-index:2;background:#f7f7f7;border-right:1px solid #e0e0e0;font-size:11px;font-weight:700">Visits</td>`;
+  sDates.forEach(d=>{let dv=0;atsS.forEach(n=>{const data=m[n+'|'+d];if(data)dv+=data.Visits});h+=`<td class="hm" style="font-weight:700;background:#f7f7f7">${dv||''}</td>`});
+  h+=`</tr>`;
   atsS.forEach((n,ai)=>{
-    const bgGroup=ai%2===0?'#fff':'#fafafa';
+    const bg=ai%2===0?'#fff':'#fafafa';
     metrics.forEach((mt,mi)=>{
-      h+=`<tr style="background:${bgGroup}">`;
-      if(mi===0) h+=`<td rowspan="${metrics.length}" style="font-weight:600;white-space:nowrap;position:sticky;left:0;z-index:2;background:${bgGroup};border-right:none;vertical-align:top;padding-top:10px;border-bottom:1px solid #ddd">${n}</td>`;
-      h+=`<td style="position:sticky;left:160px;z-index:2;background:${bgGroup};border-right:1px solid #e0e0e0;font-size:11px;color:${mCol[mt]};font-weight:500;white-space:nowrap;box-shadow:2px 0 4px rgba(0,0,0,0.04);${mi===metrics.length-1?'border-bottom:1px solid #ddd;':''}">${mt}</td>`;
-      let rowT=0;
-      sDates.forEach(d=>{const data=m[n+'|'+d];const v=data?(data[mKey2[mt]]||0):0;rowT+=v;const isHL=mt==='Contract Signed'&&v>0;h+=`<td class="hm" style="font-size:11px;${isHL?'color:#0d7c5f;font-weight:700;':''}${mi===metrics.length-1?'border-bottom:1px solid #ddd;':''}">${v||'<span style=\"color:#ddd\">·</span>'}</td>`});
-      const isHL=mt==='Contract Signed'&&rowT>0;
-      h+=`<td class="hm" style="font-weight:600;background:#f5f5f5;${isHL?'color:#0d7c5f;':''}${mi===metrics.length-1?'border-bottom:1px solid #ddd;':''}">${rowT||''}</td></tr>`;
+      h+=`<tr style="background:${bg}">`;
+      if(mi===0) h+=`<td rowspan="${metrics.length}" style="font-weight:600;white-space:nowrap;position:sticky;left:0;z-index:2;background:${bg};border-right:none;vertical-align:top;padding-top:10px;border-bottom:1px solid #ddd">${n}</td>`;
+      h+=`<td style="position:sticky;left:160px;z-index:2;background:${bg};border-right:1px solid #e0e0e0;font-size:11px;color:${mCol[mt]};font-weight:500;white-space:nowrap;box-shadow:2px 0 4px rgba(0,0,0,0.04);${mi===metrics.length-1?'border-bottom:1px solid #ddd;':''}">${mt}</td>`;
+      sDates.forEach(d=>{const data=m[n+'|'+d];const v=data?(data[mKey2[mt]]||0):0;const isHL=mt==='Contract Signed'&&v>0;h+=`<td class="hm" style="font-size:11px;${isHL?'color:#0d7c5f;font-weight:700;':''}${mi===metrics.length-1?'border-bottom:1px solid #ddd;':''}">${v||'<span style=\"color:#ddd\">·</span>'}</td>`});
+      h+=`</tr>`;
     });
-  });
-  metrics.forEach((mt,mi)=>{
-    h+=`<tr class="fo-rt">`;if(mi===0)h+=`<td rowspan="${metrics.length}" style="font-weight:700;position:sticky;left:0;z-index:2;background:#f0f0f0;border-right:none;vertical-align:top;padding-top:8px">Total</td>`;
-    h+=`<td style="position:sticky;left:160px;z-index:2;background:#f0f0f0;border-right:1px solid #e0e0e0;font-size:11px;color:${mCol[mt]};font-weight:700">${mt}</td>`;
-    let rowT=0;sDates.forEach(d=>{let dayV=0;atsS.forEach(n=>{const data=m[n+'|'+d];if(data)dayV+=(data[mKey2[mt]]||0)});rowT+=dayV;h+=`<td class="hm">${dayV||''}</td>`});
-    h+=`<td class="hm" style="background:#e8e8e8;font-weight:800">${rowT}</td></tr>`;
   });
   h+=`</tbody></table></div>`;
 
-  if(reasonsList.length){
-    h+=`<div style="margin-top:12px"><div style="font-size:10px;color:#999;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Rejection Reasons (${reasonsList.length})</div>`;
-    h+=`<div class="tbl-wrap"><table><tr><th style="text-align:left">ATS</th><th style="text-align:left">Store</th><th style="text-align:left">Reason</th><th>Date</th></tr>`;
-    reasonsList.forEach(({ats,store,reason,date})=>{h+=`<tr><td style="font-weight:500">${ats}</td><td>${store}</td><td><span class="fo-miss">${reason}</span></td><td class="hm" style="font-size:11px">${date}</td></tr>`});
-    h+=`</table></div></div>`;
+  /* ── Rejection Reasons: pie + filterable explorer ── */
+  const rejected=so.filter(r=>fg.soContract(r)!=='Yes');
+  if(rejected.length){
+    /* Pie chart of reasons */
+    const pieColors=['#e15759','#f28e2b','#4e79a7','#76b7b2','#59a14f','#edc948','#b07aa1','#9c755f'];
+    const reasons={};rejected.forEach(r=>{const w=fg.soWhyNo(r);if(w)reasons[w]=(reasons[w]||0)+1});
+    if(Object.keys(reasons).length){
+      h+=`<div style="margin-top:16px">`+foPieCard('Rejection Reasons',reasons,pieColors,`${rejected.length} rejected of ${so.length} total`)+`</div>`;
+    }
+
+    /* Explorer with filters */
+    h+=`<div style="margin-top:16px">`;
+    h+=`<div style="font-size:10px;color:#999;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Visit Details Explorer</div>`;
+    h+=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">`;
+    h+=`<select id="so-f-date" style="padding:4px 8px;font-size:11px;border:1px solid #e0e0e0;border-radius:3px;background:#fff;font-family:inherit"><option value="all">All Dates</option>${sDates.map(d=>`<option value="${d}">${foDateLabel(d).replace(/<[^>]*>/g,' ').trim()}</option>`).join('')}</select>`;
+    h+=`<select id="so-f-ats" style="padding:4px 8px;font-size:11px;border:1px solid #e0e0e0;border-radius:3px;background:#fff;font-family:inherit"><option value="all">All ATS</option>${atsS.map(n=>`<option value="${n}">${n}</option>`).join('')}</select>`;
+    h+=`</div>`;
+    h+=`<div id="so-explorer"></div></div>`;
+    document.getElementById('fo-s4').innerHTML=h;
+
+    /* Store full SO rows for explorer */
+    window._foSO=so;
+    const renderExplorer=()=>{
+      const fd=document.getElementById('so-f-date').value;
+      const fa=document.getElementById('so-f-ats').value;
+      let filtered=so;
+      if(fd!=='all')filtered=filtered.filter(r=>foDateKey(r)===fd);
+      if(fa!=='all')filtered=filtered.filter(r=>fg.name(r)===fa);
+      let t=`<div class="tbl-wrap"><table style="font-size:11px"><tr><th style="text-align:left">ATS</th><th style="text-align:left">Store</th><th>Date</th><th>Category</th><th>Sales</th><th>Contract</th><th style="text-align:left">Reason</th><th>Phone</th><th>Docs</th><th>Competitors</th><th>Present</th><th>RAs new</th><th>Offered</th><th>Attempted</th></tr>`;
+      filtered.forEach(r=>{
+        const c=fg.soContract(r);
+        t+=`<tr>`;
+        t+=`<td style="font-weight:500">${fg.name(r)}</td>`;
+        t+=`<td>${fg.store(r)}</td>`;
+        t+=`<td class="hm">${foDateKey(r)}</td>`;
+        t+=`<td class="hm">${fg.soCategory(r)}</td>`;
+        t+=`<td class="hm">${fg.soSales(r)||'—'}</td>`;
+        t+=`<td class="hm"><span class="${c==='Yes'?'fo-ok':'fo-miss'}">${c||'—'}</span></td>`;
+        t+=`<td style="color:#999">${fg.soWhyNo(r)||'—'}</td>`;
+        t+=`<td class="hm">${fg.soPhone(r)||'—'}</td>`;
+        t+=`<td class="hm">${fg.soDocs(r)||'—'}</td>`;
+        t+=`<td class="hm">${fg.soComp(r)||'—'}</td>`;
+        t+=`<td class="hm">${fg.whoPresent(r)||'—'}</td>`;
+        t+=`<td class="hm">${fg.newRAs(r)||'0'}</td>`;
+        t+=`<td class="hm">${fg.offered(r)||'0'}</td>`;
+        t+=`<td class="hm">${fg.attempted(r)||'0'}</td>`;
+        t+=`</tr>`;
+      });
+      t+=`</table></div>`;
+      t+=`<div style="font-size:10px;color:#bbb;margin-top:4px">${filtered.length} visits shown</div>`;
+      document.getElementById('so-explorer').innerHTML=t;
+    };
+    document.getElementById('so-f-date').onchange=renderExplorer;
+    document.getElementById('so-f-ats').onchange=renderExplorer;
+    renderExplorer();
+  } else {
+    document.getElementById('fo-s4').innerHTML=h;
   }
-  document.getElementById('fo-s4').innerHTML=h;
 }
 
-/* ═══ S7: Competitors & Segmentation — SVG Pie charts with type filter ═══ */
-function foS7_Segmentation(rows,act,react,port,so){
-  const pieColors=['#4e79a7','#f28e2b','#59a14f','#e15759','#76b7b2','#edc948','#b07aa1','#ff9da7','#9c755f','#bab0ac','#6a9e3f','#d4a0a0'];
-  let h=`<div style="margin-bottom:12px"><select id="s7filter" style="padding:4px 24px 4px 8px;font-size:11px;border:1px solid #e0e0e0;border-radius:3px;background:#fff;color:#333;cursor:pointer;font-family:inherit">`;
-  h+=`<option value="all">All Visit Types</option><option value="Activation">Activation</option><option value="Reactivation">Reactivation</option><option value="Portfolio">Portfolio</option><option value="Store Opening">Store Opening</option>`;
-  h+=`</select></div><div id="fo-s7-pies"></div>`;
-  document.getElementById('fo-s7').innerHTML=h;
-  window._foS7={rows,act,react,port,so,pieColors};
-  document.getElementById('s7filter').onchange=()=>foS7draw();
-  foS7draw();
-}
-
-function foS7draw(){
-  const {rows,act,react,port,so,pieColors}=window._foS7;
-  const sel=document.getElementById('s7filter').value;
-  let compSets=[],salesSets=[],catSets=[];
-  if(sel==='all'||sel==='Activation'){compSets.push({list:act,fn:fg.actComp});salesSets.push({list:act,fn:fg.actSales})}
-  if(sel==='all'||sel==='Reactivation'){compSets.push({list:react,fn:fg.reactComp})}
-  if(sel==='all'||sel==='Portfolio'){compSets.push({list:port,fn:fg.portComp})}
-  if(sel==='all'||sel==='Store Opening'){compSets.push({list:so,fn:fg.soComp});salesSets.push({list:so,fn:fg.soSales});catSets.push({list:so,fn:fg.soCategory})}
-
-  const comps={};let compV=0;
-  compSets.forEach(({list,fn})=>{list.forEach(r=>{compV++;const v=fn(r);if(v)(v).split(';').forEach(c=>{c=c.trim();if(c&&!/^none$/i.test(c))comps[c]=(comps[c]||0)+1})})});
-  const sales={};salesSets.forEach(({list,fn})=>{list.forEach(r=>{const v=fn(r);if(v)sales[v]=(sales[v]||0)+1})});
-  const cats={};catSets.forEach(({list,fn})=>{list.forEach(r=>{const c=fn(r).trim();if(c)cats[c]=(cats[c]||0)+1})});
-
-  let h='';
-  if(Object.keys(comps).length)h+=foPieCard('Competitor Presence',comps,pieColors,`from ${compV} visits`);
-  else h+=`<div class="fo-card"><div class="fo-card-h"><h3>Competitor Presence</h3></div><div class="fo-card-p" style="padding:20px;color:#999;font-size:12px">No competitor data.</div></div>`;
-
-  const totalSales=Object.values(sales).reduce((a,b)=>a+b,0);
-  if(totalSales){const sO=['0-100,000','100,000-200,000','200,000-300,000','300,000-500,000','500,000-1,000,000','1,000,000+'];const oS={};sO.forEach(s=>{if(sales[s])oS[s]=sales[s]});Object.keys(sales).forEach(s=>{if(!sO.includes(s))oS[s]=sales[s]});h+=foPieCard('Monthly Sales Volume',oS,pieColors,`from ${totalSales} visits`)}
-  else if(sel==='all'||sel==='Activation'||sel==='Store Opening')h+=`<div class="fo-card"><div class="fo-card-h"><h3>Monthly Sales Volume</h3></div><div class="fo-card-p" style="padding:20px;color:#999;font-size:12px">No sales data.</div></div>`;
-
-  if(Object.keys(cats).length)h+=foPieCard('Business Category',cats,pieColors,`from ${Object.values(cats).reduce((a,b)=>a+b,0)} stores`);
-  else if(sel==='all'||sel==='Store Opening')h+=`<div class="fo-card"><div class="fo-card-h"><h3>Business Category</h3></div><div class="fo-card-p" style="padding:20px;color:#999;font-size:12px">No category data.</div></div>`;
-
-  document.getElementById('fo-s7-pies').innerHTML=h;
-}
-
+/* ═══ SVG Pie Card (shared) ═══ */
 function foPieCard(title,data,colors,subtitle){
   const entries=Object.entries(data).sort((a,b)=>b[1]-a[1]);
   const total=entries.reduce((s,e)=>s+e[1],0);if(!total)return'';
@@ -1500,6 +1477,38 @@ function foPieCard(title,data,colors,subtitle){
   let leg='';entries.forEach(([k,v],i)=>{const p=Math.round(v/total*100);leg+=`<div style="display:flex;align-items:center;gap:8px;margin:3px 0;font-size:12px;line-height:1.5"><div style="width:12px;height:12px;border-radius:2px;background:${colors[i%colors.length]};flex-shrink:0"></div><span style="font-weight:700;min-width:30px">${p}%</span><span style="color:#333">${k}</span><span style="color:#999">(${v})</span></div>`});
   const subH=subtitle?`<span style="font-size:11px;color:#999;margin-left:auto">${subtitle}</span>`:'';
   return `<div class="fo-card" style="margin-bottom:10px"><div class="fo-card-h"><h3>${title}</h3>${subH}</div><div class="fo-card-p" style="display:flex;align-items:center;gap:30px;flex-wrap:wrap;padding:20px">${svg}<div>${leg}</div></div></div>`;
+}
+
+/* ═══ S7: Competitors & Segmentation ═══ */
+function foS7_Segmentation(rows,act,react,port,so){
+  const pieColors=['#4e79a7','#f28e2b','#59a14f','#e15759','#76b7b2','#edc948','#b07aa1','#ff9da7','#9c755f','#bab0ac','#6a9e3f','#d4a0a0'];
+  let h=`<div style="margin-bottom:12px"><select id="s7filter" style="padding:4px 24px 4px 8px;font-size:11px;border:1px solid #e0e0e0;border-radius:3px;background:#fff;color:#333;cursor:pointer;font-family:inherit">`;
+  h+=`<option value="all">All Visit Types</option><option value="Activation">Activation</option><option value="Reactivation">Reactivation</option><option value="Portfolio">Portfolio</option><option value="Store Opening">Store Opening</option>`;
+  h+=`</select></div><div id="fo-s7-pies"></div>`;
+  document.getElementById('fo-s7').innerHTML=h;
+  window._foS7={rows,act,react,port,so,pieColors};
+  document.getElementById('s7filter').onchange=()=>foS7draw();
+  foS7draw();
+}
+function foS7draw(){
+  const {act,react,port,so,pieColors}=window._foS7;
+  const sel=document.getElementById('s7filter').value;
+  let compSets=[],salesSets=[],catSets=[];
+  if(sel==='all'||sel==='Activation'){compSets.push({list:act,fn:fg.actComp});salesSets.push({list:act,fn:fg.actSales})}
+  if(sel==='all'||sel==='Reactivation')compSets.push({list:react,fn:fg.reactComp});
+  if(sel==='all'||sel==='Portfolio')compSets.push({list:port,fn:fg.portComp});
+  if(sel==='all'||sel==='Store Opening'){compSets.push({list:so,fn:fg.soComp});salesSets.push({list:so,fn:fg.soSales});catSets.push({list:so,fn:fg.soCategory})}
+  const comps={};let compV=0;
+  compSets.forEach(({list,fn})=>{list.forEach(r=>{compV++;const v=fn(r);if(v)(v).split(';').forEach(c=>{c=c.trim();if(c&&!/^none$/i.test(c))comps[c]=(comps[c]||0)+1})})});
+  const sales={};salesSets.forEach(({list,fn})=>{list.forEach(r=>{const v=fn(r);if(v)sales[v]=(sales[v]||0)+1})});
+  const cats={};catSets.forEach(({list,fn})=>{list.forEach(r=>{const c=fn(r).trim();if(c)cats[c]=(cats[c]||0)+1})});
+  let h='';
+  const noData='<div class="fo-card"><div class="fo-card-p" style="padding:20px;color:#999;font-size:12px">No data for selected type.</div></div>';
+  h+=Object.keys(comps).length?foPieCard('Competitor Presence',comps,pieColors,`from ${compV} visits`):noData;
+  const totalSales=Object.values(sales).reduce((a,b)=>a+b,0);
+  if(totalSales){const sO=['0-100,000','100,000-200,000','200,000-300,000','300,000-500,000','500,000-1,000,000','1,000,000+'];const oS={};sO.forEach(s=>{if(sales[s])oS[s]=sales[s]});Object.keys(sales).forEach(s=>{if(!sO.includes(s))oS[s]=sales[s]});h+=foPieCard('Monthly Sales Volume',oS,pieColors,`from ${totalSales} visits`)}
+  if(Object.keys(cats).length)h+=foPieCard('Business Category',cats,pieColors,`from ${Object.values(cats).reduce((a,b)=>a+b,0)} stores`);
+  document.getElementById('fo-s7-pies').innerHTML=h;
 }
 
 })();
