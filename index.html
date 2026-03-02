@@ -157,7 +157,7 @@ tr:hover .bm-c1,tr:hover .bm-c2{background:#f0f4fa}
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="13" width="4" height="9" fill="#fff" opacity=".9"/><rect x="8" y="8" width="4" height="14" fill="#fff" opacity=".7"/><rect x="14" y="4" width="4" height="18" fill="#fff" opacity=".9"/><rect x="20" y="1" width="4" height="21" fill="#fff" opacity=".7"/></svg>
     <h1>NCR Pilot BM Check</h1><span class="sub">Pilot Group vs Other NCR Team</span>
   </div>
-  <div class="dt">Updated: Sep 01 – Feb 23 (updated Mar 02, 14:45)</div>
+  <div class="dt">Updated: Sep 01 – Feb 23 (updated Mar 02, 14:55)</div>
 </div>
 
 <div class="tabs" id="tabs">
@@ -563,7 +563,7 @@ function fmtP(v){return '₱'+Math.round(v).toLocaleString();}
 const PLAN={"Aldrin Jhon Hina": 1000000, "Arvin Anonuevo": 2194407.84, "Dad Ivan Natividad": 1218047, "Jay Ar Dastas": 1000000, "Christy Marasigan": 1369317, "Jhan-Jhan Buac": 1889766, "Mary Anne Melvida": 2577496, "Ricardo Sabala Jr.": 1464923, "Tricxie Mae Nazareta": 1000000, "Jay Mark Toledana": 1388050, "Ma. Cynthia Juano Mahinay": 1000000, "Oscar Saverola Casimo": 1000000, "Roselyn Espinosa Vargas": 1889169, "Argenith Orlain Regonaos": 1000000};
 
 // Monthly days config
-const MONTH_DAYS={Jun:{total:30,elapsed:1},Jul:{total:31,elapsed:31},Aug:{total:31,elapsed:31},Sep:{total:30,elapsed:30},Oct:{total:31,elapsed:31},Nov:{total:30,elapsed:30},Dec:{total:31,elapsed:31},Jan:{total:31,elapsed:31},Feb:{total:28,elapsed:25}};
+const MONTH_DAYS={"Sep": {"total": 30, "elapsed": 30}, "Oct": {"total": 31, "elapsed": 31}, "Nov": {"total": 30, "elapsed": 30}, "Dec": {"total": 31, "elapsed": 31}, "Jan": {"total": 31, "elapsed": 31}, "Feb": {"total": 28, "elapsed": 28}};
 
 if(window._plansMonth===undefined) window._plansMonth=BM_ML.length-1;
 if(window._plansSplit===undefined) window._plansSplit=true;
