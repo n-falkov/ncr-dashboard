@@ -157,7 +157,7 @@ tr:hover .bm-c1,tr:hover .bm-c2{background:#f0f4fa}
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="13" width="4" height="9" fill="#fff" opacity=".9"/><rect x="8" y="8" width="4" height="14" fill="#fff" opacity=".7"/><rect x="14" y="4" width="4" height="18" fill="#fff" opacity=".9"/><rect x="20" y="1" width="4" height="21" fill="#fff" opacity=".7"/></svg>
     <h1>NCR Pilot BM Check</h1><span class="sub">Pilot Group vs Other NCR Team</span>
   </div>
-  <div class="dt">Updated: Sep 01 – Feb 23 (updated Mar 02, 14:55)</div>
+  <div class="dt">Updated: Sep 01 – Feb 23 (updated Mar 02, 18:42)</div>
 </div>
 
 <div class="tabs" id="tabs">
@@ -764,33 +764,31 @@ function rPlans(){
 }
 
 // ═══ CHURN RATE TAB ═══
-const CH_ML=['Jan-25','Feb-25','Mar-25','Apr-25','May-25','Jun-25','Jul-25','Aug-25','Sep-25','Oct-25','Nov-25','Dec-25','Jan-26','Feb-26'];
-const CH_LOAN={"Aldrin Jhon Hina":[40.0,25.0,33.3,33.3,20.0,28.6,14.3,0,25.0,30.0,12.5,22.2,20.0,8.3],"Argenith Orlain Regonaos":[0,0,12.5,28.6,0,28.6,33.3,33.3,16.7,25.0,0,23.1,18.8,42.1],"Arvin Anonuevo":[7.7,23.1,7.1,10.5,22.2,7.1,5.9,22.2,18.8,6.7,11.1,16.0,25.7,28.6],"Christy Marasigan":[14.3,14.3,0,12.5,22.2,11.1,20.0,0,16.7,25.0,11.1,16.7,26.7,31.2],"Dad Ivan Natividad":[0,0,0,0,0,16.7,28.6,16.7,0,12.5,0,0,27.3,12.5],"Jay Ar Dastas":[0,0,50.0,50.0,0,33.3,33.3,40.0,40.0,60.0,33.3,12.5,37.5,43.8],"Jay Mark Toledana":[12.5,0,9.1,15.4,50.0,44.4,28.6,18.2,25.0,7.7,18.8,23.5,0,40.9],"Jhan-Jhan Buac":[15.4,16.7,10.0,21.4,33.3,33.3,27.3,36.4,8.3,6.7,21.1,15.0,40.7,40.0],"Ma. Cynthia Juano Mahinay":[0,0,66.7,0,66.7,50.0,66.7,0,20.0,33.3,85.7,0,31.2,35.7],"Mary Anne Melvida":[22.2,12.5,14.3,0,0,9.1,9.1,0,0,17.6,6.7,0,9.1,26.1],"Oscar Saverola Casimo":[66.7,0,0,0,25.0,0,0,0,0,33.3,0,16.7,14.3,28.6],"Ricardo Sabala Jr.":[16.7,0,0,0,20.0,44.4,0,0,28.6,20.0,0,35.3,8.3,15.4],"Roselyn Espinosa Vargas":[28.6,14.3,14.3,12.5,0,37.5,12.5,33.3,22.2,16.7,38.5,11.1,15.4,20.0],"Tricxie Mae Nazareta":[16.7,20.0,0,50.0,25.0,50.0,33.3,33.3,20.0,20.0,14.3,22.2,30.8,18.2]};
-const CH_APP={"Aldrin Jhon Hina":[42.9,25.0,33.3,16.7,16.7,11.1,9.1,10.0,28.6,18.2,33.3,20.0,14.3,12.5],"Argenith Orlain Regonaos":[0,0,12.5,0,10.0,33.3,14.3,44.4,20.0,18.2,27.3,22.2,15.8,40.0],"Arvin Anonuevo":[7.1,20.0,0,22.7,11.1,5.9,5.3,10.0,10.5,5.3,9.5,13.3,16.7,26.1],"Christy Marasigan":[0,12.5,12.5,10.0,20.0,10.0,30.8,10.0,25.0,28.6,25.0,20.0,21.1,39.1],"Dad Ivan Natividad":[0,0,0,0,0,12.5,12.5,25.0,0,20.0,0,0,16.7,27.3],"Jay Ar Dastas":[0,0,50.0,33.3,25.0,0,14.3,0,40.0,50.0,40.0,0,28.6,25.0],"Jay Mark Toledana":[0,9.1,9.1,0,21.4,26.7,8.3,21.1,30.0,11.1,16.7,23.8,10.0,24.0],"Jhan-Jhan Buac":[21.4,15.4,9.1,17.6,30.0,31.2,22.2,30.0,20.0,22.7,20.8,17.4,36.7,24.0],"Ma. Cynthia Juano Mahinay":[0,33.3,50.0,0,60.0,33.3,50.0,0,20.0,37.5,62.5,20.0,15.8,26.3],"Mary Anne Melvida":[10.0,22.2,0,0,0,9.1,8.3,0,12.5,16.7,0,0,8.0,18.5],"Oscar Saverola Casimo":[66.7,0,0,0,25.0,0,0,0,0,16.7,16.7,25.0,12.5,0],"Ricardo Sabala Jr.":[37.5,0,0,12.5,16.7,16.7,18.2,7.1,7.1,42.1,7.1,30.0,12.5,6.7],"Roselyn Espinosa Vargas":[25.0,0,11.1,12.5,0,25.0,11.1,10.0,9.1,15.4,21.4,8.3,18.8,11.8],"Tricxie Mae Nazareta":[16.7,20.0,0,22.2,14.3,16.7,16.7,28.6,12.5,25.0,20.0,20.0,20.0,28.6]};
+const CH_ML=["Oct-25", "Nov-25", "Dec-25", "Jan-26", "Feb-26"];
+const CH_LOAN={"Aldrin Jhon Hina": [27.3, 12.5, 22.2, 20.0, 8.3], "Arvin Anonuevo": [14.3, 13.3, 10.5, 28.6, 26.9], "Dad Ivan Natividad": [14.3, 0.0, 0.0, 30.0, 14.3], "Jay Ar Dastas": [50.0, 33.3, 12.5, 35.3, 37.5], "Christy Marasigan": [25.0, 11.1, 16.7, 31.2, 20.0], "Jhan-Jhan Buac": [6.2, 30.0, 16.7, 44.4, 26.3], "Mary Anne Melvida": [18.8, 7.1, 0.0, 5.0, 13.6], "Ricardo Sabala Jr.": [20.0, 0.0, 35.3, 8.3, 7.7], "Tricxie Mae Nazareta": [16.7, 14.3, 22.2, 30.8, 18.2], "Jay Mark Toledana": [14.3, 20.0, 13.3, 6.2, 25.0], "Ma. Cynthia Juano Mahinay": [25.0, 83.3, 33.3, 33.3, 23.1], "Oscar Saverola Casimo": [33.3, 0.0, 16.7, 28.6, 0.0], "Roselyn Espinosa Vargas": [18.2, 41.7, 12.5, 18.2, 7.7], "Argenith Orlain Regonaos": [37.5, 0.0, 15.4, 23.5, 33.3]};
 
 function rChurn(){
   const fullLabels=CH_ML;
-  const si=8; // start index: Sep-25
-  const labels=fullLabels.slice(si);
-  const pAvgLoan=labels.map((_,i)=>{const v=PN.map(n=>(CH_LOAN[n]||[])[si+i]||0);return +(v.reduce((a,b)=>a+b,0)/v.length).toFixed(1);});
-  const oAvgLoan=labels.map((_,i)=>{const v=ON.map(n=>(CH_LOAN[n]||[])[si+i]||0);return +(v.reduce((a,b)=>a+b,0)/v.length).toFixed(1);});
+  const si=0;
+  const labels=fullLabels;
+  const pAvgLoan=labels.map((_,i)=>{const v=PN.map(n=>(CH_LOAN[n]||[])[i]||0);return +(v.reduce((a,b)=>a+b,0)/v.length).toFixed(1);});
+  const oAvgLoan=labels.map((_,i)=>{const v=ON.map(n=>(CH_LOAN[n]||[])[i]||0);return +(v.reduce((a,b)=>a+b,0)/v.length).toFixed(1);});
 
   let h='';
 
   h+=`<div class="row r1">`;
-  h+=sh("Avg Churn Rate by Loan","Pilot vs Other NCR — monthly %",cv("ch1"));
+  h+=sh("Avg Churn Rate by COMBO Disbursement","Pilot vs Other NCR — monthly %",cv("ch1"));
   h+=`</div>`;
 
   const allN=[...PN,...ON];
   function churnTable(data, title){
-    const tLabels=fullLabels.slice(si);
+    const tLabels=fullLabels;
     let t=`<table><thead><tr><th style="text-align:left">ATS Name</th><th>Group</th>`;
     tLabels.forEach(m=>t+=`<th>${m}</th>`);
     t+=`<th style="background:#eef1f6">Avg</th></tr></thead><tbody>`;
-    const sorted=[...allN].sort((a,b)=>{const aa=data[a]||[],bb=data[b]||[];return (aa[si+labels.length-1]||0)-(bb[si+labels.length-1]||0);});
+    const sorted=[...allN].sort((a,b)=>{const aa=data[a]||[],bb=data[b]||[];return (aa[labels.length-1]||0)-(bb[labels.length-1]||0);});
     sorted.forEach((n,ri)=>{
-      const fullVals=data[n]||new Array(14).fill(0);
-      const vals=fullVals.slice(si);
+      const vals=data[n]||new Array(labels.length).fill(0);
       const avg=+(vals.reduce((s,v)=>s+v,0)/vals.length).toFixed(1);
       const ip=PN.includes(n);
       t+=`<tr${ri%2?' class="alt"':''}>`;
