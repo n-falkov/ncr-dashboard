@@ -158,7 +158,7 @@ tr:hover .bm-c1,tr:hover .bm-c2{background:#f0f4fa}
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="13" width="4" height="9" fill="#fff" opacity=".9"/><rect x="8" y="8" width="4" height="14" fill="#fff" opacity=".7"/><rect x="14" y="4" width="4" height="18" fill="#fff" opacity=".9"/><rect x="20" y="1" width="4" height="21" fill="#fff" opacity=".7"/></svg>
     <h1>NCR Pilot BM Check</h1><span class="sub">Pilot Group vs Other NCR Team</span>
   </div>
-  <div class="dt">Updated: Sep 01 – Mar 02 (updated Mar 03, 08:53)</div>
+  <div class="dt">Updated: Sep 01 – Mar 02 (updated Mar 03, 14:49)</div>
 </div>
 
 <div class="tabs" id="tabs">
@@ -1284,14 +1284,14 @@ function foBMTable(targetId,subsetRows,cfg){
   subsetRows.forEach(r=>{const n=fg.name(r),d=foDateKey(r);if(!n||!d)return;const key=n+'|'+d;if(!m[key])m[key]={};getData(r,m[key])});
 
   let h=`<div class="tbl-wrap" style="max-height:70vh;overflow:auto"><table style="border-collapse:separate;border-spacing:0">`;
-  h+=`<thead><tr style="position:sticky;top:0;z-index:10"><th style="text-align:left;position:sticky;left:0;z-index:12;background:#f0f0f0;min-width:160px;border-right:1px solid #e0e0e0">ATS</th>`;
-  h+=`<th style="position:sticky;left:160px;z-index:12;background:#f0f0f0;min-width:130px;border-right:1px solid #e0e0e0;text-align:left">Metric</th>`;
+  h+=`<thead><tr style="position:sticky;top:0;z-index:10"><th style="text-align:left;position:sticky;left:0;z-index:12;background:#f0f0f0;min-width:120px;border-right:1px solid #e0e0e0">ATS</th>`;
+  h+=`<th style="position:sticky;left:120px;z-index:12;background:#f0f0f0;min-width:100px;border-right:1px solid #e0e0e0;text-align:left">Metric</th>`;
   datesIn.forEach(d=>{h+=`<th class="hm" style="background:#f0f0f0;min-width:56px">${foDateLabel(d)}</th>`});
   h+=`</tr></thead><tbody>`;
 
   /* Grand Total row at top */
   h+=`<tr style="background:#f7f7f7;border-bottom:2px solid #ccc"><td style="font-weight:700;position:sticky;left:0;z-index:2;background:#f7f7f7;border-right:none">Grand Total</td>`;
-  h+=`<td style="position:sticky;left:160px;z-index:2;background:#f7f7f7;border-right:1px solid #e0e0e0;font-size:11px;font-weight:700;color:#333">Visits</td>`;
+  h+=`<td style="position:sticky;left:120px;z-index:2;background:#f7f7f7;border-right:1px solid #e0e0e0;font-size:11px;font-weight:700;color:#333">Visits</td>`;
   datesIn.forEach(d=>{let dv=0;atsIn.forEach(n=>{const data=m[n+'|'+d];if(data)dv+=(data[mKey[metrics[0]]]||0)});h+=`<td class="hm" style="font-weight:700;background:#f7f7f7">${dv||''}</td>`});
   h+=`</tr>`;
 
@@ -1300,7 +1300,7 @@ function foBMTable(targetId,subsetRows,cfg){
     metrics.forEach((mt,mi)=>{
       h+=`<tr style="background:${bg}">`;
       if(mi===0) h+=`<td rowspan="${metrics.length}" style="font-weight:600;white-space:nowrap;position:sticky;left:0;z-index:2;background:${bg};border-right:none;vertical-align:top;padding-top:10px;border-bottom:1px solid #ddd">${n}</td>`;
-      h+=`<td style="position:sticky;left:160px;z-index:2;background:${bg};border-right:1px solid #e0e0e0;font-size:11px;color:${mCol[mt]};font-weight:500;white-space:nowrap;box-shadow:2px 0 4px rgba(0,0,0,0.04);${mi===metrics.length-1?'border-bottom:1px solid #ddd;':''}">${mt}</td>`;
+      h+=`<td style="position:sticky;left:120px;z-index:2;background:${bg};border-right:1px solid #e0e0e0;font-size:11px;color:${mCol[mt]};font-weight:500;white-space:nowrap;box-shadow:2px 0 4px rgba(0,0,0,0.04);${mi===metrics.length-1?'border-bottom:1px solid #ddd;':''}">${mt}</td>`;
       datesIn.forEach(d=>{const data=m[n+'|'+d];const v=data?(data[mKey[mt]]||0):0;const isHL=mt===highlightMetric&&v>0;
         h+=`<td class="hm" style="font-size:11px;${isHL?'color:'+highlightColor+';font-weight:700;':''}${mi===metrics.length-1?'border-bottom:1px solid #ddd;':''}">${v||'<span style=\"color:#ddd\">·</span>'}</td>`});
       h+=`</tr>`;
@@ -1318,14 +1318,14 @@ function foS1_Daily(rows,ats,dates){
   rows.forEach(r=>{const n=fg.name(r),d=foDateKey(r),t=fg.type(r);if(!n||!d||!t)return;m[n+'|'+d+'|'+t]=(m[n+'|'+d+'|'+t]||0)+1});
 
   let h=`<div class="tbl-wrap" style="max-height:70vh;overflow:auto"><table style="border-collapse:separate;border-spacing:0">`;
-  h+=`<thead><tr style="position:sticky;top:0;z-index:10"><th style="text-align:left;position:sticky;left:0;z-index:12;background:#f0f0f0;min-width:160px;border-right:1px solid #e0e0e0">ATS</th>`;
-  h+=`<th style="position:sticky;left:160px;z-index:12;background:#f0f0f0;min-width:130px;border-right:1px solid #e0e0e0;text-align:left">Metric</th>`;
+  h+=`<thead><tr style="position:sticky;top:0;z-index:10"><th style="text-align:left;position:sticky;left:0;z-index:12;background:#f0f0f0;min-width:120px;border-right:1px solid #e0e0e0">ATS</th>`;
+  h+=`<th style="position:sticky;left:120px;z-index:12;background:#f0f0f0;min-width:100px;border-right:1px solid #e0e0e0;text-align:left">Metric</th>`;
   dates.forEach(d=>{h+=`<th class="hm" style="background:#f0f0f0;min-width:56px">${foDateLabel(d)}</th>`});
   h+=`</tr></thead><tbody>`;
 
   /* Grand Total row at top */
   h+=`<tr style="background:#f7f7f7;border-bottom:2px solid #ccc"><td style="font-weight:700;position:sticky;left:0;z-index:2;background:#f7f7f7;border-right:none">Grand Total</td>`;
-  h+=`<td style="position:sticky;left:160px;z-index:2;background:#f7f7f7;border-right:1px solid #e0e0e0;font-size:11px;font-weight:700;color:#333">All Visits</td>`;
+  h+=`<td style="position:sticky;left:120px;z-index:2;background:#f7f7f7;border-right:1px solid #e0e0e0;font-size:11px;font-weight:700;color:#333">All Visits</td>`;
   dates.forEach(d=>{const dayT=rows.filter(r=>fg.name(r)&&foDateKey(r)===d).length;h+=`<td class="hm" style="font-weight:700;background:#f7f7f7">${dayT||''}</td>`});
   h+=`</tr>`;
 
@@ -1334,7 +1334,7 @@ function foS1_Daily(rows,ats,dates){
     types.forEach((t,ti)=>{
       h+=`<tr style="background:${bg}">`;
       if(ti===0) h+=`<td rowspan="${types.length}" style="font-weight:600;white-space:nowrap;position:sticky;left:0;z-index:2;background:${bg};border-right:none;vertical-align:top;padding-top:10px;border-bottom:1px solid #ddd">${n}</td>`;
-      h+=`<td style="position:sticky;left:160px;z-index:2;background:${bg};border-right:1px solid #e0e0e0;font-size:11px;color:${tCol[t]};font-weight:500;white-space:nowrap;box-shadow:2px 0 4px rgba(0,0,0,0.04);${ti===types.length-1?'border-bottom:1px solid #ddd;':''}">${t}</td>`;
+      h+=`<td style="position:sticky;left:120px;z-index:2;background:${bg};border-right:1px solid #e0e0e0;font-size:11px;color:${tCol[t]};font-weight:500;white-space:nowrap;box-shadow:2px 0 4px rgba(0,0,0,0.04);${ti===types.length-1?'border-bottom:1px solid #ddd;':''}">${t}</td>`;
       dates.forEach(d=>{const v=m[n+'|'+d+'|'+t]||0;h+=`<td class="hm" style="font-size:11px;${ti===types.length-1?'border-bottom:1px solid #ddd;':''}">${v||'<span style=\"color:#ddd\">·</span>'}</td>`});
       h+=`</tr>`;
     });
@@ -1381,13 +1381,13 @@ function foS4_StoreOpening(so){
   const mKey2={'Visits':'Visits','Phone Collected':'Phone','Contract Signed':'Contract'};
 
   let h=`<div class="tbl-wrap" style="max-height:70vh;overflow:auto"><table style="border-collapse:separate;border-spacing:0">`;
-  h+=`<thead><tr style="position:sticky;top:0;z-index:10"><th style="text-align:left;position:sticky;left:0;z-index:12;background:#f0f0f0;min-width:160px;border-right:1px solid #e0e0e0">ATS</th>`;
-  h+=`<th style="position:sticky;left:160px;z-index:12;background:#f0f0f0;min-width:130px;border-right:1px solid #e0e0e0;text-align:left">Metric</th>`;
+  h+=`<thead><tr style="position:sticky;top:0;z-index:10"><th style="text-align:left;position:sticky;left:0;z-index:12;background:#f0f0f0;min-width:120px;border-right:1px solid #e0e0e0">ATS</th>`;
+  h+=`<th style="position:sticky;left:120px;z-index:12;background:#f0f0f0;min-width:100px;border-right:1px solid #e0e0e0;text-align:left">Metric</th>`;
   sDates.forEach(d=>{h+=`<th class="hm" style="background:#f0f0f0;min-width:56px">${foDateLabel(d)}</th>`});
   h+=`</tr></thead><tbody>`;
   /* Grand Total */
   h+=`<tr style="background:#f7f7f7"><td style="font-weight:700;position:sticky;left:0;z-index:2;background:#f7f7f7;border-right:none">Grand Total</td>`;
-  h+=`<td style="position:sticky;left:160px;z-index:2;background:#f7f7f7;border-right:1px solid #e0e0e0;font-size:11px;font-weight:700">Visits</td>`;
+  h+=`<td style="position:sticky;left:120px;z-index:2;background:#f7f7f7;border-right:1px solid #e0e0e0;font-size:11px;font-weight:700">Visits</td>`;
   sDates.forEach(d=>{let dv=0;atsS.forEach(n=>{const data=m[n+'|'+d];if(data)dv+=data.Visits});h+=`<td class="hm" style="font-weight:700;background:#f7f7f7">${dv||''}</td>`});
   h+=`</tr>`;
   atsS.forEach((n,ai)=>{
@@ -1395,7 +1395,7 @@ function foS4_StoreOpening(so){
     metrics.forEach((mt,mi)=>{
       h+=`<tr style="background:${bg}">`;
       if(mi===0) h+=`<td rowspan="${metrics.length}" style="font-weight:600;white-space:nowrap;position:sticky;left:0;z-index:2;background:${bg};border-right:none;vertical-align:top;padding-top:10px;border-bottom:1px solid #ddd">${n}</td>`;
-      h+=`<td style="position:sticky;left:160px;z-index:2;background:${bg};border-right:1px solid #e0e0e0;font-size:11px;color:${mCol[mt]};font-weight:500;white-space:nowrap;box-shadow:2px 0 4px rgba(0,0,0,0.04);${mi===metrics.length-1?'border-bottom:1px solid #ddd;':''}">${mt}</td>`;
+      h+=`<td style="position:sticky;left:120px;z-index:2;background:${bg};border-right:1px solid #e0e0e0;font-size:11px;color:${mCol[mt]};font-weight:500;white-space:nowrap;box-shadow:2px 0 4px rgba(0,0,0,0.04);${mi===metrics.length-1?'border-bottom:1px solid #ddd;':''}">${mt}</td>`;
       sDates.forEach(d=>{const data=m[n+'|'+d];const v=data?(data[mKey2[mt]]||0):0;const isHL=mt==='Contract Signed'&&v>0;h+=`<td class="hm" style="font-size:11px;${isHL?'color:#0d7c5f;font-weight:700;':''}${mi===metrics.length-1?'border-bottom:1px solid #ddd;':''}">${v||'<span style=\"color:#ddd\">·</span>'}</td>`});
       h+=`</tr>`;
     });
