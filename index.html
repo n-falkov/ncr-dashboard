@@ -43,6 +43,7 @@ body{font-family:'Source Sans 3','Trebuchet MS',sans-serif;background:#f7f7f7;co
 table{width:100%;border-collapse:collapse;font-size:12px}
 th{padding:8px 10px;text-align:center;font-size:11px;font-weight:700;color:#4a4a4a;background:#f0f0f0;white-space:nowrap}
 td{padding:7px 10px;font-size:12px}
+.hm{text-align:center;min-width:56px;width:56px;max-width:72px;padding:6px 4px!important;white-space:nowrap}
 tr.alt{background:#fafafa}
 tr.sum{border-top:2px solid #4a4a4a;background:#f0f0f0;font-weight:700}
 .ft{padding:12px 20px;border-top:1px solid #e0e0e0;display:flex;justify-content:space-between;font-size:10px;color:#999}
@@ -157,7 +158,7 @@ tr:hover .bm-c1,tr:hover .bm-c2{background:#f0f4fa}
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="13" width="4" height="9" fill="#fff" opacity=".9"/><rect x="8" y="8" width="4" height="14" fill="#fff" opacity=".7"/><rect x="14" y="4" width="4" height="18" fill="#fff" opacity=".9"/><rect x="20" y="1" width="4" height="21" fill="#fff" opacity=".7"/></svg>
     <h1>NCR Pilot BM Check</h1><span class="sub">Pilot Group vs Other NCR Team</span>
   </div>
-  <div class="dt">Updated: Sep 01 – Mar 02 (updated Mar 03, 08:29)</div>
+  <div class="dt">Updated: Sep 01 – Mar 02 (updated Mar 03, 08:53)</div>
 </div>
 
 <div class="tabs" id="tabs">
@@ -592,11 +593,11 @@ function rPlans(){
   const {data:MDATA,daysElapsed,totalDays,label:mLabel}=getMonthData(mi);
 
   function planData(name){
-    const f=MDATA[name], plan=PLAN[name];
+    const f=MDATA[name]||{s:0,a:0,d:0,l:0,ap:0}, plan=PLAN[name]||1000000;
     const actual=f.d, scored=f.s, approved=f.a, loans=f.l, apps=f.ap;
-    const pct=actual/plan*100;
+    const pct=plan>0?actual/plan*100:0;
     const rr=daysElapsed>0?actual/daysElapsed*totalDays:0;
-    const rrPct=rr/plan*100;
+    const rrPct=plan>0?rr/plan*100:0;
     const ar=scored?approved/scored*100:0;
     let status,scl;
     if(pct>=100){status="DONE";scl="sb-done";}
@@ -611,7 +612,8 @@ function rPlans(){
 
   // Month selector
   let mSel=`<select onchange="window._plansMonth=+this.value;rPlans();" style="padding:4px 10px;border:1px solid #ccc;border-radius:4px;font-size:12px;font-weight:600">`;
-  BM_ML.forEach((m,i)=>{mSel+=`<option value="${i}"${i===mi?' selected':''}>${m} ${i<=6?'2025':'2026'}</option>`;});
+  const _myr=m=>{const s=['Jan','Feb','Mar','Apr','May'];return s.includes(m)?'2026':'2025'};
+  BM_ML.forEach((m,i)=>{mSel+=`<option value="${i}"${i===mi?' selected':''}>${m} ${_myr(m)}</option>`;});
   mSel+=`</select>`;
 
   let h=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
@@ -633,7 +635,7 @@ function rPlans(){
     const oActual=oGrp.reduce((s,d)=>s+d.actual,0), oPlan=oGrp.reduce((s,d)=>s+d.plan,0);
     const pRR=daysElapsed>0?pActual/daysElapsed*totalDays:0, oRR=daysElapsed>0?oActual/daysElapsed*totalDays:0;
     h+=`<div style="background:linear-gradient(135deg,#e8f0fe,#f0f4ff);border:2px solid #4e79a7;border-radius:8px;padding:20px 24px;margin-bottom:16px">
-      <div style="font-size:12px;color:#666;margin-bottom:14px">${mLabel} 2026 • ${daysElapsed} of ${totalDays} days elapsed (${timePct.toFixed(0)}%) • Run Rate = actual ÷ ${daysElapsed}d × ${totalDays}d</div>
+      <div style="font-size:12px;color:#666;margin-bottom:14px">${mLabel} ${_myr(mLabel)} • ${daysElapsed} of ${totalDays} days elapsed (${timePct.toFixed(0)}%) • Run Rate = actual ÷ ${daysElapsed}d × ${totalDays}d</div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
         <div style="background:#fff;border-radius:6px;padding:14px 18px;border-left:4px solid ${PC}">
           <div style="font-size:11px;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Pilot Actual / Plan</div>
@@ -663,7 +665,7 @@ function rPlans(){
     const tActual=all.reduce((s,d)=>s+d.actual,0), tPlan=all.reduce((s,d)=>s+d.plan,0);
     const tRR=daysElapsed>0?tActual/daysElapsed*totalDays:0;
     h+=`<div style="background:linear-gradient(135deg,#f0f0f0,#fafafa);border:2px solid #555;border-radius:8px;padding:20px 24px;margin-bottom:16px">
-      <div style="font-size:12px;color:#666;margin-bottom:14px">${mLabel} ${mi<=6?'2025':'2026'} • ${daysElapsed} of ${totalDays} days elapsed (${timePct.toFixed(0)}%) • Run Rate = actual ÷ ${daysElapsed}d × ${totalDays}d</div>
+      <div style="font-size:12px;color:#666;margin-bottom:14px">${mLabel} ${_myr(mLabel)} • ${daysElapsed} of ${totalDays} days elapsed (${timePct.toFixed(0)}%) • Run Rate = actual ÷ ${daysElapsed}d × ${totalDays}d</div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
         <div style="background:#fff;border-radius:6px;padding:14px 18px;border-left:4px solid #555">
           <div style="font-size:11px;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">NCR Team Actual / Plan</div>
@@ -1232,7 +1234,8 @@ function foDateLabel(d){
 
 /* ── File handling ── */
 const foUB=document.getElementById('foUpB'),foFI=document.getElementById('foFIn'),foRI=document.getElementById('foRIn');
-foUB.onclick=()=>foFI.click();
+foUB.onclick=e=>{if(e.target===foFI)return;foFI.click()};
+foFI.onclick=e=>e.stopPropagation();
 foUB.ondragover=e=>{e.preventDefault();foUB.classList.add('dov')};
 foUB.ondragleave=()=>foUB.classList.remove('dov');
 foUB.ondrop=e=>{e.preventDefault();foUB.classList.remove('dov');if(e.dataTransfer.files.length)foLd(e.dataTransfer.files[0])};
