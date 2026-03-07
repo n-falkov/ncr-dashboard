@@ -1,0 +1,1621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCR Pilot BM Check</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Source Sans 3','Trebuchet MS',sans-serif;background:#f7f7f7;color:#333;min-height:100vh}
+.hdr{background:#4a4a4a;color:#fff;padding:10px 20px;display:flex;align-items:center;justify-content:space-between}
+.hdr h1{font-size:15px;font-weight:700}
+.hdr .sub{font-size:11px;opacity:.6;margin-left:8px}
+.hdr .dt{font-size:11px;opacity:.5}
+.tabs{display:flex;background:#e8e8e8;border-bottom:1px solid #e0e0e0;padding:0 12px}
+.tab{padding:8px 18px;font-size:12px;cursor:pointer;border:none;font-family:inherit;background:transparent;color:#666;border-radius:3px 3px 0 0;font-weight:400;border-bottom:2px solid transparent;border-top:2px solid transparent;border-left:1px solid transparent;border-right:1px solid transparent}
+.tab.on{font-weight:700;background:#fff;color:#333;border-bottom:2px solid #4e79a7;border-top:2px solid #4e79a7;border-left:1px solid #e0e0e0;border-right:1px solid #e0e0e0;margin-bottom:-1px}
+.fbar{display:flex;align-items:center;gap:16px;padding:10px 20px;background:#fff;border-bottom:1px solid #e0e0e0;flex-wrap:wrap}
+.fbar label{font-size:11px;color:#666;font-weight:600}
+.fbar select{padding:4px 24px 4px 8px;font-size:12px;border:1px solid #e0e0e0;border-radius:2px;background:#fff;color:#333;cursor:pointer;font-family:inherit}
+.dv{height:20px;width:1px;background:#e0e0e0}
+.lg{display:flex;align-items:center;gap:6px;font-size:11px;color:#666;font-weight:500}
+.lb{width:14px;height:14px;border-radius:1px}
+.bd{padding:16px}
+.row{display:grid;gap:12px;margin-bottom:12px}
+.r5{grid-template-columns:repeat(5,1fr)}.r4{grid-template-columns:repeat(4,1fr)}.r3{grid-template-columns:repeat(3,1fr)}.r2{grid-template-columns:1fr 1fr}.r1{grid-template-columns:1fr}
+.kpi{background:#fff;border:1px solid #e0e0e0;padding:16px 20px;text-align:center}
+.kl{font-size:10px;color:#999;text-transform:uppercase;letter-spacing:1.2px;font-weight:600;margin-bottom:8px}
+.kv{font-size:28px;font-weight:700;color:#333;line-height:1}
+.kd{margin-top:6px;font-size:11px;font-weight:600}
+.kd.up{color:#59a14f}.kd.dn{color:#e15759}
+.sh{background:#fff;border:1px solid #e0e0e0;display:flex;flex-direction:column}
+.sh-h{padding:10px 14px 8px;border-bottom:1px solid #ebebeb}
+.sh-t{font-size:13px;font-weight:700;color:#333}
+.sh-s{font-size:11px;color:#999;margin-top:2px}
+.sh-b{flex:1;padding:10px;position:relative}
+.cc{position:relative;width:100%;min-height:250px}
+.cc.tall{min-height:280px}
+.cc.short{min-height:210px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{padding:8px 10px;text-align:center;font-size:11px;font-weight:700;color:#4a4a4a;background:#f0f0f0;white-space:nowrap}
+td{padding:7px 10px;font-size:12px}
+.hm{text-align:center;min-width:56px;width:56px;max-width:72px;padding:6px 4px!important;white-space:nowrap}
+tr.alt{background:#fafafa}
+tr.sum{border-top:2px solid #4a4a4a;background:#f0f0f0;font-weight:700}
+.ft{padding:12px 20px;border-top:1px solid #e0e0e0;display:flex;justify-content:space-between;font-size:10px;color:#999}
+.hd{display:none}
+.pbar{height:8px;background:#e8e8e8;border-radius:4px;overflow:hidden;margin-top:4px}
+.pbar-fill{height:100%;border-radius:4px;transition:width .3s}
+.status-badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;letter-spacing:.5px}
+.sb-ahead{background:#e8f5e9;color:#2e7d32}.sb-risk{background:#fff3e0;color:#e65100}.sb-behind{background:#fbe9e7;color:#c62828}.sb-done{background:#e3f2fd;color:#1565c0}
+.gran{display:inline-flex;border:1px solid #e0e0e0;border-radius:3px;overflow:hidden;margin-left:12px}
+.gran button{padding:4px 14px;font-size:11px;cursor:pointer;border:none;background:#fff;color:#666;font-family:inherit;font-weight:500;border-right:1px solid #e0e0e0;transition:all .15s}
+.gran button:last-child{border-right:none}
+.gran button.on{background:#4e79a7;color:#fff;font-weight:700}
+.gran button:hover:not(.on){background:#f0f4ff}
+/* ═══ Field Ops CSS ═══ */
+.fo-upload{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;min-height:400px}
+.fo-upload.hid{display:none}
+.fo-dropbox{width:420px;max-width:90vw;background:#fff;border:2px dashed #ccc;border-radius:10px;padding:40px 30px;text-align:center;cursor:pointer;transition:.2s}
+.fo-dropbox:hover,.fo-dropbox.dov{border-color:#4e79a7;background:#e8f0fe}
+.fo-dropbox h2{font-size:15px;font-weight:600;margin-bottom:4px}
+.fo-dropbox p{color:#999;font-size:12px}
+.fo-dropbox input{display:none}
+.fo-db{display:none}
+.fo-db.vis{display:block;animation:fofi .4s}
+@keyframes fofi{from{opacity:0}to{opacity:1}}
+.fo-ctrl{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.fo-ctrl-l{display:flex;align-items:center;gap:8px}
+.fo-badge{display:flex;align-items:center;gap:6px;padding:4px 10px;background:#e6f4ee;border-radius:5px;font-size:11px;color:#0d7c5f;font-weight:500}
+.fo-badge .dot{width:5px;height:5px;border-radius:50%;background:#0d7c5f}
+.fo-meta{font-size:11px;color:#999}
+.fo-btn{padding:5px 12px;background:#fff;border:1px solid #e0e0e0;border-radius:4px;color:#555;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;transition:.15s}
+.fo-btn:hover{background:#f0f0f0}
+.fo-btn-accent{background:#4e79a7;color:#fff;border-color:#4e79a7}
+.fo-btn-accent:hover{background:#3d6890}
+.fo-krow{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.fo-kc{background:#fff;border:1px solid #e0e0e0;border-radius:4px;padding:14px 16px;text-align:center}
+.fo-kl{font-size:9px;color:#999;text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:6px}
+.fo-kv{font-size:24px;font-weight:700;color:#333}
+.fo-ks{font-size:10px;color:#999;margin-top:3px}
+.fo-sec{margin-bottom:18px}
+.fo-sec-h{display:flex;align-items:baseline;gap:10px;padding:0 0 8px;border-bottom:2px solid #e0e0e0;margin-bottom:10px}
+.fo-sec-n{font-size:10px;font-weight:700;color:#4e79a7;background:#e8f0fe;padding:2px 6px;border-radius:3px}
+.fo-sec-h h2{font-size:13px;font-weight:700;color:#333}
+.fo-sec-s{font-size:11px;color:#999;margin-left:auto}
+.fo-card{background:#fff;border:1px solid #e0e0e0;border-radius:4px;margin-bottom:10px;overflow:hidden}
+.fo-card-h{padding:10px 14px;border-bottom:1px solid #ebebeb;display:flex;align-items:center;gap:8px}
+.fo-card-h h3{font-size:12px;font-weight:600}
+.fo-card-b{padding:0;overflow-x:auto}
+.fo-card-p{padding:14px}
+.fo-card table{width:100%;border-collapse:collapse;font-size:11px}
+.fo-card th{padding:6px 8px;text-align:center;font-size:10px;font-weight:700;color:#4a4a4a;background:#f0f0f0;white-space:nowrap}
+.fo-card td{padding:5px 8px;font-size:11px;border-bottom:1px solid #f0f0f0}
+.fo-card tr:last-child td{border-bottom:none}
+.fo-rn{font-weight:600;white-space:nowrap;position:sticky;left:0;background:#fff;z-index:1;padding:4px 8px}
+.fo-col1{position:sticky;left:0;white-space:nowrap;padding:4px 8px}
+.fo-col2{position:sticky;left:0;white-space:nowrap;padding:4px 8px}
+.bm-tbl{border-collapse:separate;border-spacing:0}
+.bm-tbl thead th{position:sticky;top:0;background:#f7f8fb;z-index:3;border-bottom:2px solid #e0e0e0}
+:root{--bm-c1w:clamp(200px,18vw,260px);--bm-c2w:clamp(120px,12vw,170px)}
+.bm-tbl thead .bm-c1{z-index:5;background:#f7f8fb}
+.bm-tbl thead .bm-c2{z-index:5;background:#f7f8fb}
+.bm-c1{position:sticky;left:0;background:#fff;z-index:2;width:var(--bm-c1w);min-width:200px;max-width:260px;padding:6px 8px;white-space:normal;word-break:break-word;line-height:1.2;border-right:none}
+.bm-c2{position:sticky;left:var(--bm-c1w);background:#fff;z-index:2;width:var(--bm-c2w);min-width:120px;max-width:170px;padding:6px 8px;white-space:normal;word-break:break-word;line-height:1.2;border-right:1px solid #e0e0e0;box-shadow:2px 0 4px rgba(0,0,0,0.04)}
+.bm-gh{padding:6px 10px}
+.fo-rt .bm-c1,.fo-rt .bm-c2{background:#f7f8fb}
+tr:hover .bm-c1,tr:hover .bm-c2{background:#f0f4fa}
+.fo-n{text-align:center;font-family:'Source Sans 3',monospace;min-width:52px;max-width:64px;padding:6px 4px;font-size:11px}
+.fo-n0{color:#ccc}
+.fo-ng{color:#0d7c5f;font-weight:600}
+.fo-nh{color:#4e79a7;font-weight:600}
+.fo-np{color:#7b1fa2;font-weight:600}
+.fo-ok{display:inline-flex;align-items:center;justify-content:center;min-width:18px;padding:1px 4px;border-radius:3px;font-size:10px;font-weight:600;background:#e6f4ee;color:#0d7c5f}
+.fo-miss{display:inline-flex;align-items:center;justify-content:center;min-width:18px;padding:1px 4px;border-radius:3px;font-size:10px;font-weight:600;background:#fce8e6;color:#c5221f}
+.fo-na{display:inline-flex;align-items:center;justify-content:center;min-width:18px;padding:1px 4px;border-radius:3px;font-size:10px;font-weight:500;background:#e8f0fe;color:#4e79a7}
+.fo-dc{text-align:center;vertical-align:middle;padding:3px 2px!important}
+.fo-db-g{display:flex;gap:2px;justify-content:center}
+.fo-rt td{border-top:2px solid #4a4a4a!important;background:#f0f0f0;font-weight:700}
+.fo-pb-w{display:flex;align-items:center;gap:6px}
+.fo-pb{height:6px;background:#e8e8e8;border-radius:3px;flex:1;overflow:hidden}
+.fo-pb-f{height:100%;border-radius:3px}
+.fo-pb-v{font-size:11px;font-weight:700;min-width:36px;text-align:right}
+.fo-rlist{display:flex;flex-direction:column;gap:6px}
+.fo-ritem{display:flex;align-items:center;gap:8px}
+.fo-rpct{font-size:11px;font-weight:700;min-width:32px;text-align:right}
+.fo-rbar{height:8px;border-radius:3px;flex-shrink:0}
+.fo-rtxt{font-size:11px;color:#333}
+.fo-acard{display:flex;gap:10px;padding:10px 14px;border-bottom:1px solid #f0f0f0}
+.fo-atag{font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;white-space:nowrap;align-self:start;margin-top:2px}
+.fo-abody{flex:1;font-size:12px;line-height:1.5}
+.fo-asub{font-size:11px;color:#999;margin-top:2px}
+.fo-aexpand{font-size:10px;color:#4e79a7;cursor:pointer;background:none;border:none;font-family:inherit;margin-top:4px;padding:0}
+.fo-aexpand:hover{text-decoration:underline}
+.fo-adetails{display:none;margin-top:8px;padding:10px;background:#f7f7f7;border-radius:4px;border:1px solid #e0e0e0}
+.fo-adetails.open{display:block}
+.fo-afield{display:flex;gap:8px;padding:3px 0;border-bottom:1px solid #ebebeb;font-size:10px}
+.fo-afk{font-weight:600;color:#555;min-width:180px;flex-shrink:0}
+.fo-afv{color:#333;word-break:break-word}
+.fo-si-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.fo-si-box{background:#f7f7f7;border-radius:4px;padding:12px;text-align:center}
+.fo-si-v{font-size:22px;font-weight:700}
+.fo-si-l{font-size:10px;color:#999;text-transform:uppercase;font-weight:600;margin-top:2px}
+/* Report modal */
+.fo-modal-bg{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);z-index:1000;display:none;align-items:center;justify-content:center}
+.fo-modal-bg.show{display:flex}
+.fo-modal{background:#fff;border-radius:8px;width:560px;max-width:92vw;max-height:85vh;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.15)}
+.fo-modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #e0e0e0}
+.fo-modal-hdr h2{font-size:14px;font-weight:700}
+.fo-modal-close{background:none;border:none;font-size:18px;cursor:pointer;color:#999;padding:4px}
+.fo-modal-body{padding:16px 20px;overflow-y:auto;max-height:calc(85vh - 60px)}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div style="display:flex;align-items:center;gap:12px">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="13" width="4" height="9" fill="#fff" opacity=".9"/><rect x="8" y="8" width="4" height="14" fill="#fff" opacity=".7"/><rect x="14" y="4" width="4" height="18" fill="#fff" opacity=".9"/><rect x="20" y="1" width="4" height="21" fill="#fff" opacity=".7"/></svg>
+    <h1>NCR Pilot BM Check</h1><span class="sub">Pilot Group vs Other NCR Team</span>
+  </div>
+  <div class="dt">Updated: /*__UPDATE_DATE__*/</div>
+</div>
+
+<div class="tabs" id="tabs">
+  <button class="tab on" data-v="bizmetrics">Business Metrics</button>
+  <button class="tab" data-v="plans">Plans & RR</button>
+  <button class="tab" data-v="newstores">New Stores</button>
+  <button class="tab" data-v="churn">Churn</button>
+  <button class="tab" data-v="fieldops">Field Ops</button>
+</div>
+
+<div class="fbar" id="fbar">
+  <div class="lg"><div class="lb" style="background:#4e79a7"></div>Pilot Group (4 ATS)</div>
+  <div class="lg"><div class="lb" style="background:#f28e2b"></div>Other NCR (10 ATS)</div>
+  <div class="dv"></div>
+  <label>View:</label>
+  <div class="gran" id="gran">
+    <button class="on" data-g="weekly">Weekly</button>
+    <button data-g="monthly">Monthly</button>
+    <button data-g="overall">Overall</button>
+  </div>
+</div>
+
+<div class="bd">
+  <div id="v-newstores"></div>
+  <div id="v-plans" class="hd"></div>
+  <div id="v-churn" class="hd"></div>
+  <div id="v-bizmetrics" class="hd"></div>
+  <div id="v-fieldops" class="hd">
+    <div class="fo-upload" id="foUpZ">
+      <div class="fo-dropbox" id="foUpB">
+        <div style="font-size:28px;margin-bottom:12px">📊</div>
+        <h2>Upload Forms Export (.xlsx)</h2>
+        <p>ATS Visitation Form v2 — drag & drop or click to select</p>
+        <input type="file" id="foFIn" accept=".xlsx,.xls,.csv">
+      </div>
+    </div>
+    <div class="fo-db" id="foDB">
+      <div class="fo-ctrl">
+        <div class="fo-ctrl-l">
+          <div class="fo-badge"><div class="dot"></div><span id="foFN">—</span></div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="fo-btn" onclick="document.getElementById('foRIn').click()">↻ Reload</button>
+          <input type="file" id="foRIn" accept=".xlsx,.xls,.csv" style="display:none">
+        </div>
+      </div>
+      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">01</span><h2>Daily Tracker</h2><span class="fo-sec-s">Visits per ATS per day, by type</span></div><div id="fo-s1"></div></div>
+      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">02</span><h2>Activation Tracker</h2><span class="fo-sec-s">Visits, offers, applications, activations by loan</span></div><div id="fo-s2"></div></div>
+      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">03</span><h2>Reactivation Tracker</h2><span class="fo-sec-s">Visits, offers, applications, reactivations by loan</span></div><div id="fo-s3"></div></div>
+      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">04</span><h2>Store Opening Tracker</h2><span class="fo-sec-s">Phone collected, contract signed, rejection reasons</span></div><div id="fo-s4"></div></div>
+      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">05</span><h2>Competitors & Store Segmentation</h2><span class="fo-sec-s">Competitor presence, sales volume, categories</span></div><div id="fo-s7"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="ft">
+  <span>Pilot: Aldrin Jhon Hina, Arvin Anonuevo, Dad Ivan Natividad, Jay Ar Dastas | Other: Christy Marasigan, Jhan-Jhan Buac, Mary Anne Melvida, Ricardo Sabala Jr., Tricxie Mae Nazareta</span>
+  <span>Sources: General_Report_truncated-47/48.xlsx (territory-matched)</span>
+</div>
+
+<script>
+// ─── LABELS ───
+const WL=/*__NS_WL__*/;
+const DL=[];
+const ML=/*__NS_ML__*/;
+const OL=["Jan 5 – Feb 16"];
+const TEAM_BY_MONTH=/*__TEAM_BY_MONTH__*/;
+const ALL_ATS_LIST=/*__ALL_ATS__*/;
+const PC="#4e79a7",OC="#f28e2b",GC="#59a14f",RC="#e15759",TC="#76b7b2";
+
+// ─── PORTFOLIO weekly ───
+const R=/*__NS_R__*/;
+
+// ─── NEW STORES: Weekly ───
+const W_FL=/*__NS_W_FL__*/;
+const W_FA=/*__NS_W_FA__*/;
+const W_SR=/*__NS_W_SR__*/;
+
+// ─── NEW STORES: Daily (empty) ───
+const D_FL={},D_FA={},D_SR={};
+
+// ─── NEW STORES: Monthly ───
+const M_FL=/*__NS_M_FL__*/;
+const M_FA=/*__NS_M_FA__*/;
+const M_SR=/*__NS_M_SR__*/;
+
+// ─── NEW STORES: Overall ───
+const O_FL=/*__NS_O_FL__*/;
+const O_FA=/*__NS_O_FA__*/;
+const O_SR=/*__NS_O_SR__*/;
+
+// ─── Portfolio: monthly & overall aggregation from weekly R ───
+// Week→month mapping: weeks 0-3 = Jan (Jan5,12,19,26), weeks 4-5 = Feb (Feb2,9)
+const JW=[0,1,2,3], FW=[4,5,6,7];
+function aggR(field, monthWeeks){ return (n)=> n.reduce((s,x)=>s+monthWeeks.reduce((ss,wi)=>ss+(R[x]?.[field]?.[wi]||0),0),0); }
+function avgR(field, monthWeeks){ return (n)=> n.reduce((s,x)=>s+monthWeeks.reduce((ss,wi)=>ss+(R[x]?.[field]?.[wi]||0),0),0) / monthWeeks.length; }
+
+// ─── Granularity accessor: returns {labels, fl, fa, sr} for current gran ───
+function G(){
+  if(curG==="daily") return {labels:DL, fl:D_FL, fa:D_FA, sr:D_SR};
+  if(curG==="weekly") return {labels:WL, fl:W_FL, fa:W_FA, sr:W_SR};
+  if(curG==="monthly") return {labels:ML, fl:M_FL, fa:M_FA, sr:M_SR};
+  return {labels:OL, fl:O_FL, fa:O_FA, sr:O_SR};
+}
+
+// Portfolio labels for current gran
+function PL(){
+  if(curG==="daily") return DL; // daily charts won't use portfolio (weekly only)
+  if(curG==="weekly") return WL;
+  if(curG==="monthly") return ML;
+  return OL;
+}
+
+// Aggregate portfolio metric for a group at period index, respecting granularity
+function gaG(names,field,i){
+  if(curG==="weekly") return names.reduce((s,x)=>s+(R[x]?.[field]?.[i]||0),0);
+  if(curG==="monthly"){
+    const wks=i===0?JW:FW;
+    return names.reduce((s,x)=>s+wks.reduce((ss,wi)=>ss+(R[x]?.[field]?.[wi]||0),0),0);
+  }
+  if(curG==="overall") return names.reduce((s,x)=>s+R[x][field].reduce((a,b)=>a+b,0),0);
+  // daily: spread weekly evenly across 7 days — use weekly value / 7
+  // Map day index to week index
+  const wi=Math.min(Math.floor(i/7),5);
+  return names.reduce((s,x)=>s+(R[x]?.[field]?.[wi]||0),0)/7;
+}
+function gvG(names,field,i){ return gaG(names,field,i)/names.length; }
+
+// ─── Helpers ───
+const ga=(n,m,i)=>n.reduce((s,x)=>s+(R[x]?.[m]?.[i]||0),0);
+const gv=(n,m,i)=>ga(n,m,i)/n.length;
+const fK=v=>"₱"+(v/1000).toFixed(0)+"K";
+const fM=v=>"₱"+(v/1e6).toFixed(1)+"M";
+const nsSum=(data,names)=>names.reduce((s,n)=>s+data[n].reduce((a,b)=>a+b,0),0);
+const nsWk=(data,names,i)=>names.reduce((s,n)=>s+(data[n][i]||0),0);
+const nsCum=(data,names)=>{let c=0;return G().labels.map((_,i)=>{c+=nsWk(data,names,i);return c;});};
+const nsInd=(data,name)=>data[name].reduce((a,b)=>a+b,0);
+
+// ─── Chart.js ───
+Chart.register(ChartDataLabels);
+Chart.defaults.set('plugins.datalabels',{display:false});
+Chart.defaults.font.family="'Source Sans 3','Trebuchet MS',sans-serif";
+Chart.defaults.font.size=11;Chart.defaults.color="#666";
+Chart.defaults.plugins.legend.labels.boxWidth=12;Chart.defaults.plugins.legend.labels.boxHeight=12;
+Chart.defaults.plugins.tooltip.backgroundColor="#333";Chart.defaults.plugins.tooltip.cornerRadius=2;Chart.defaults.plugins.tooltip.padding=10;
+const ch={};
+function dc(id){if(ch[id]){ch[id].destroy();delete ch[id];}}
+function mc(id,type,data,opts){dc(id);const el=document.getElementById(id);if(!el)return;ch[id]=new Chart(el.getContext("2d"),{type,data,options:{responsive:true,maintainAspectRatio:false,animation:{duration:250},...opts}});}
+const lgB={position:"bottom",labels:{padding:12}};
+function bDs(l,d,c){return{label:l,data:d,backgroundColor:c,borderRadius:2,barPercentage:.7};}
+function lDs(l,d,c,fill){return{label:l,data:d,borderColor:c,backgroundColor:fill?c+"1f":c,pointRadius:curG==="daily"?2:4,pointBackgroundColor:c,borderWidth:curG==="daily"?1.5:2.5,fill:!!fill,tension:0};}
+
+// ─── HTML helpers ───
+function kpi(label,val,ref2,unit,cl){
+  const df=ref2!=null?val-ref2:null;const pc=ref2?((df/ref2)*100).toFixed(1):null;
+  const dsp=(unit==="₱"?"₱":"")+(typeof val==="number"?val.toLocaleString(undefined,{maximumFractionDigits:0}):val)+(unit==="%"?"%":"");
+  let dt="";if(df!=null)dt=`<div class="kd ${df>=0?"up":"dn"}">${df>=0?"▲":"▼"} ${Math.abs(pc)}% vs ${cl||"Other"}</div>`;
+  return`<div class="kpi"><div class="kl">${label}</div><div class="kv">${dsp}</div>${dt}</div>`;
+}
+function sh(t,s,c){return`<div class="sh"><div class="sh-h"><div class="sh-t">${t}</div>${s?`<div class="sh-s">${s}</div>`:""}</div><div class="sh-b">${c}</div></div>`;}
+function cv(id,cls){return`<div class="cc ${cls||""}"><canvas id="${id}"></canvas></div>`;}
+
+let curV="bizmetrics",curG="weekly";
+let periodIdx = -1; // -1 = all periods; shared across tabs
+function setPeriod(idx){ periodIdx=idx; render(); }
+
+function periodDropdown(id){
+  const labels = curG==='weekly'?WL:curG==='monthly'?ML:OL;
+  const pi = periodIdx<0||periodIdx>=labels.length ? -1 : periodIdx;
+  let opts=`<option value="-1"${pi<0?' selected':''}>All Periods</option>`;
+  labels.forEach((lb,i)=>{opts+=`<option value="${i}"${pi===i?' selected':''}>${lb}</option>`;});
+  return `<select id="${id}" onchange="setPeriod(+this.value)" style="padding:6px 12px;border-radius:6px;border:1px solid #ccc;background:#fff;font-size:12px;font-weight:600;color:#333;cursor:pointer;min-width:130px">${opts}</select>`;
+}
+
+// ═══ SUMMARY ═══
+
+// ═══ NEW STORES ═══
+function rNewStores(){
+  const g=G();
+  // Use weekly/monthly labels from BM data for the new tables
+  const nsGran=(curG==='monthly')?'monthly':'weekly';
+  const wLabels=WL; // Jan 5 .. Feb 16 (7 weeks)
+  const mLabels=ML; // Jan 2026, Feb 2026
+
+  // ── New Stores tab-local gran toggle ──
+  if(!window._nsGran) window._nsGran='weekly';
+  const gran=window._nsGran;
+  const labels=gran==='weekly'?wLabels:mLabels;
+  const NP=labels.length;
+  const fl=gran==='weekly'?W_FL:(gran==='monthly'?M_FL:O_FL);
+  const fa=gran==='weekly'?W_FA:(gran==='monthly'?M_FA:O_FA);
+  const sr=gran==='weekly'?W_SR:(gran==='monthly'?M_SR:O_SR);
+
+  let html=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+    <div style="font-size:13px;font-weight:700;color:#333">New Stores · Jan 5 – Feb 16, 2026 <span style="font-size:10px;font-weight:400;color:#999">(store_aldi_supervisor)</span></div>
+    <div class="gran" id="nsGranBar">
+      <button class="${gran==='weekly'?'on':''}" onclick="window._nsGran='weekly';rNewStores()">Weekly</button>
+      <button class="${gran==='monthly'?'on':''}" onclick="window._nsGran='monthly';rNewStores()">Monthly</button>
+    </div>
+  </div>`;
+
+  // ── Reuse BM-style sticky table builder ──
+  function nsMkTable(title,mList,names,groupLabel,groupCol){
+    const mLen=mList.length;
+    let th=`<th class="bm-c1"></th><th class="bm-c2"></th>`+labels.map(l=>`<th class="fo-n" style="font-size:9px;min-width:52px">${l}</th>`).join('')+`<th class="fo-n" style="font-size:9px;min-width:52px;background:#eef1f6;font-weight:700">Σ</th>`;
+    let body='';
+    body+=`<tr><td class="bm-c1 bm-gh" colspan="2" style="background:${groupCol};color:#fff;font-weight:700;font-size:10px;letter-spacing:0.5px;z-index:4">${groupLabel}</td><td colspan="${NP+1}" style="background:${groupCol}"></td></tr>`;
+    names.forEach(name=>{
+      mList.forEach((m,mi)=>{
+        const isFirst=mi===0;
+        const isLast=mi===mLen-1;
+        let row='<tr'+(isLast?' style="border-bottom:2px solid #e8e8e8"':'')+'>';
+        if(isFirst) row+=`<td class="bm-c1" rowspan="${mLen}" style="vertical-align:top;font-size:11px;font-weight:600;padding-top:8px">${name}</td>`;
+        row+=`<td class="bm-c2" style="font-size:11px;color:${m.col}">${m.label}</td>`;
+        const vals=labels.map((_,i)=>m.fn(name,i));
+        const total=vals.reduce((a,b)=>a+b,0);
+        vals.forEach(v=>{
+          row+=`<td class="fo-n${v===0?' fo-n0':''}" style="font-size:11px">${v===0?'':m.fmt(v)}</td>`;
+        });
+        row+=`<td class="fo-n" style="font-size:11px;font-weight:700;background:#f7f8fb">${total===0?'':m.fmt(total)}</td>`;
+        row+='</tr>';
+        body+=row;
+      });
+    });
+    // Group totals
+    body+=`<tr><td class="bm-c1" style="height:2px;background:${groupCol}"></td><td class="bm-c2" style="height:2px;background:${groupCol}"></td><td colspan="${NP+1}" style="height:2px;background:${groupCol}"></td></tr>`;
+    mList.forEach((m,mi)=>{
+      const isFirst=mi===0;
+      const isLast=mi===mLen-1;
+      let row='<tr class="fo-rt"'+(isLast?' style="border-bottom:3px solid #333"':'')+'>';
+      if(isFirst) row+=`<td class="bm-c1" rowspan="${mLen}" style="vertical-align:top;font-size:10px;font-weight:700;padding-top:6px">${groupLabel} Total</td>`;
+      row+=`<td class="bm-c2" style="font-size:10px;color:${m.col}">${m.label}</td>`;
+      let grandTotal=0;
+      labels.forEach((_,i)=>{
+        let t=0;names.forEach(n=>t+=m.fn(n,i));
+        grandTotal+=t;
+        row+=`<td class="fo-n" style="font-size:10px;font-weight:700">${t===0?'':m.fmt(t)}</td>`;
+      });
+      row+=`<td class="fo-n" style="font-size:10px;font-weight:700;background:#eef1f6">${grandTotal===0?'':m.fmt(grandTotal)}</td>`;
+      row+='</tr>';
+      body+=row;
+    });
+    return `<div class="fo-card" style="margin-bottom:16px">${title?'<div class="fo-card-h"><h3>'+title+'</h3></div>':''}<div class="fo-card-b" style="max-height:520px;overflow:auto"><table class="bm-tbl"><thead><tr>${th}</tr></thead><tbody>${body}</tbody></table></div></div>`;
+  }
+
+  // ── Metrics definitions ──
+  const absMetrics=[
+    {label:'New Stores w Loans',col:'#4e79a7',fn:(n,i)=>(fl[n]?fl[n][i]:0)||0,fmt:v=>v.toFixed(0)},
+    {label:'New Stores w Apps',col:'#59a14f',fn:(n,i)=>(fa[n]?fa[n][i]:0)||0,fmt:v=>v.toFixed(0)},
+    {label:'New Stores w SR',col:'#76b7b2',fn:(n,i)=>(sr[n]?sr[n][i]:0)||0,fmt:v=>v.toFixed(0)}
+  ];
+
+  // Table 1: Absolute — Pilot & Other
+  html+=nsMkTable('New Stores — Absolute',absMetrics,PN,'Pilot','#4e79a7');
+  html+=nsMkTable('',absMetrics,ON,'Other NCR','#f28e2b');
+
+  // ── Table 2: Avg per ATS ──
+  const nPilot=PN.length, nOther=ON.length;
+  const avgMetrics=[
+    {label:'Avg Loans / ATS',col:'#4e79a7',fn:(n,i)=>(fl[n]?fl[n][i]:0)||0,fmt:v=>v.toFixed(2)},
+    {label:'Avg Apps / ATS',col:'#59a14f',fn:(n,i)=>(fa[n]?fa[n][i]:0)||0,fmt:v=>v.toFixed(2)},
+    {label:'Avg SR / ATS',col:'#76b7b2',fn:(n,i)=>(sr[n]?sr[n][i]:0)||0,fmt:v=>v.toFixed(2)}
+  ];
+
+  // Build avg table manually (group-level, not per-ATS)
+  function nsAvgTable(){
+    let th=`<th class="bm-c1" style="min-width:120px"></th><th class="bm-c2"></th>`+labels.map(l=>`<th class="fo-n" style="font-size:9px;min-width:52px">${l}</th>`).join('')+`<th class="fo-n" style="font-size:9px;min-width:52px;background:#eef1f6;font-weight:700">Avg</th>`;
+
+    function groupRows(names,label,col,cnt){
+      let rows='';
+      rows+=`<tr><td class="bm-c1 bm-gh" colspan="2" style="background:${col};color:#fff;font-weight:700;font-size:10px;z-index:4">${label} (${cnt} ATS)</td><td colspan="${NP+1}" style="background:${col}"></td></tr>`;
+      avgMetrics.forEach((m,mi)=>{
+        const isFirst=mi===0;
+        const isLast=mi===avgMetrics.length-1;
+        let row='<tr'+(isLast?' style="border-bottom:2px solid #e8e8e8"':'')+'>';
+        if(isFirst) row+=`<td class="bm-c1" rowspan="${avgMetrics.length}" style="vertical-align:top;font-size:11px;font-weight:600;padding-top:8px">${label}</td>`;
+        row+=`<td class="bm-c2" style="font-size:11px;color:${m.col}">${m.label}</td>`;
+        let sum=0;
+        labels.forEach((_,i)=>{
+          let t=0;names.forEach(n=>t+=m.fn(n,i));
+          const avg=t/cnt;
+          sum+=avg;
+          row+=`<td class="fo-n" style="font-size:11px">${avg===0?'':avg.toFixed(2)}</td>`;
+        });
+        const grandAvg=sum/NP;
+        row+=`<td class="fo-n" style="font-size:11px;font-weight:700;background:#f7f8fb">${grandAvg===0?'':grandAvg.toFixed(2)}</td>`;
+        row+='</tr>';
+        rows+=row;
+      });
+      return rows;
+    }
+
+    let body=groupRows(PN,'Pilot','#4e79a7',nPilot)+groupRows(ON,'Other NCR','#f28e2b',nOther);
+    return `<div class="fo-card" style="margin-bottom:16px"><div class="fo-card-h"><h3>Avg New Stores per ATS</h3></div><div class="fo-card-b" style="max-height:320px;overflow:auto"><table class="bm-tbl"><thead><tr>${th}</tr></thead><tbody>${body}</tbody></table></div></div>`;
+  }
+  html+=nsAvgTable();
+
+  // ── Table 3: Group comparison ──
+  function nsCompTable(){
+    let th=`<th class="bm-c1" style="min-width:100px"></th><th class="bm-c2"></th>`+labels.map(l=>`<th class="fo-n" style="font-size:9px;min-width:52px">${l}</th>`).join('')+`<th class="fo-n" style="font-size:9px;min-width:52px;background:#eef1f6;font-weight:700">Avg</th>`;
+
+    const compMetrics=[
+      {label:'Loans / ATS',src:fl,col:'#4e79a7'},
+      {label:'Apps / ATS',src:fa,col:'#59a14f'},
+      {label:'SR / ATS',src:sr,col:'#76b7b2'}
+    ];
+
+    let body='';
+    compMetrics.forEach(cm=>{
+      // Pilot row
+      let pRow=`<tr><td class="bm-c1" rowspan="3" style="vertical-align:top;font-size:11px;font-weight:600;padding-top:8px;color:${cm.col}">${cm.label}</td>`;
+      pRow+=`<td class="bm-c2" style="font-size:11px;color:#4e79a7;font-weight:600">Pilot</td>`;
+      let pSum=0;
+      labels.forEach((_,i)=>{
+        let t=0;PN.forEach(n=>t+=(cm.src[n]?cm.src[n][i]:0)||0);
+        const avg=t/nPilot;pSum+=avg;
+        pRow+=`<td class="fo-n" style="font-size:11px;color:#4e79a7">${avg===0?'':avg.toFixed(2)}</td>`;
+      });
+      pRow+=`<td class="fo-n" style="font-size:11px;font-weight:700;background:#f7f8fb;color:#4e79a7">${(pSum/NP).toFixed(2)}</td></tr>`;
+
+      // Other row
+      let oRow=`<tr><td class="bm-c2" style="font-size:11px;color:#f28e2b;font-weight:600">Other</td>`;
+      let oSum=0;
+      labels.forEach((_,i)=>{
+        let t=0;ON.forEach(n=>t+=(cm.src[n]?cm.src[n][i]:0)||0);
+        const avg=t/nOther;oSum+=avg;
+        oRow+=`<td class="fo-n" style="font-size:11px;color:#f28e2b">${avg===0?'':avg.toFixed(2)}</td>`;
+      });
+      oRow+=`<td class="fo-n" style="font-size:11px;font-weight:700;background:#f7f8fb;color:#f28e2b">${(oSum/NP).toFixed(2)}</td></tr>`;
+
+      // Delta row
+      let dRow=`<tr style="border-bottom:2px solid #e8e8e8"><td class="bm-c2" style="font-size:10px;color:#666">Δ Pilot vs Other</td>`;
+      labels.forEach((_,i)=>{
+        let tp=0,to=0;
+        PN.forEach(n=>tp+=(cm.src[n]?cm.src[n][i]:0)||0);
+        ON.forEach(n=>to+=(cm.src[n]?cm.src[n][i]:0)||0);
+        const pAvg=tp/nPilot,oAvg=to/nOther;
+        const delta=oAvg>0?((pAvg/oAvg-1)*100):0;
+        const dCol=delta>=0?'#0d7c5f':'#c5221f';
+        dRow+=`<td class="fo-n" style="font-size:10px;font-weight:700;color:${dCol}">${delta===0?'':((delta>=0?'+':'')+delta.toFixed(0)+'%')}</td>`;
+      });
+      // Grand avg delta
+      const gpAvg=pSum/NP,goAvg=oSum/NP;
+      const gDelta=goAvg>0?((gpAvg/goAvg-1)*100):0;
+      const gdCol=gDelta>=0?'#0d7c5f':'#c5221f';
+      dRow+=`<td class="fo-n" style="font-size:10px;font-weight:700;background:#f7f8fb;color:${gdCol}">${gDelta===0?'':((gDelta>=0?'+':'')+gDelta.toFixed(0)+'%')}</td></tr>`;
+
+      body+=pRow+oRow+dRow;
+    });
+
+    return `<div class="fo-card" style="margin-bottom:16px"><div class="fo-card-h"><h3>Pilot vs Other — Avg Productivity per ATS</h3></div><div class="fo-card-b" style="overflow:auto"><table class="bm-tbl"><thead><tr>${th}</tr></thead><tbody>${body}</tbody></table></div></div>`;
+  }
+  html+=nsCompTable();
+
+  // ── Charts: Avg per ATS ──
+  html+=`<div style="display:flex;gap:12px;flex-wrap:wrap">`;
+  [{label:'Avg New Stores w Loans / ATS',src:fl,col:['#4e79a7','#f28e2b']},{label:'Avg New Stores w Apps / ATS',src:fa,col:['#59a14f','#f28e2b']},{label:'Avg New Stores w SR / ATS',src:sr,col:['#76b7b2','#f28e2b']}].forEach(cm=>{
+    const nP=PN.length,nO=ON.length;
+    const pAvg=[],oAvg=[];
+    labels.forEach((_,i)=>{
+      let tp=0,to=0;
+      PN.forEach(n=>tp+=(cm.src[n]?cm.src[n][i]:0)||0);
+      ON.forEach(n=>to+=(cm.src[n]?cm.src[n][i]:0)||0);
+      pAvg.push(tp/nP);oAvg.push(to/nO);
+    });
+    const maxV=Math.max(...pAvg,...oAvg)*1.3||1;
+    const svgW=300,svgH=170,padL=36,padR=12,padT=16,padB=26;
+    const plotW=svgW-padL-padR,plotH=svgH-padT-padB;
+    const n=labels.length;
+    const bw=plotW/n*0.35;
+    const sx=i=>padL+i*(plotW/n)+plotW/n*0.15;
+    const sy=v=>padT+plotH*(1-v/maxV);
+    let bars='';
+    pAvg.forEach((v,i)=>{const h=plotH*(v/maxV);bars+=`<rect x="${sx(i)}" y="${sy(v)}" width="${bw}" height="${h}" fill="${cm.col[0]}" rx="2"><title>Pilot ${labels[i]}: ${v.toFixed(2)}</title></rect>`;});
+    oAvg.forEach((v,i)=>{const h=plotH*(v/maxV);bars+=`<rect x="${sx(i)+bw+2}" y="${sy(v)}" width="${bw}" height="${h}" fill="${cm.col[1]}" rx="2" opacity="0.7"><title>Other ${labels[i]}: ${v.toFixed(2)}</title></rect>`;});
+    let grid='';for(let g=0;g<=3;g++){const gv=maxV*g/3;grid+=`<line x1="${padL}" y1="${sy(gv)}" x2="${svgW-padR}" y2="${sy(gv)}" stroke="#eee"/><text x="${padL-4}" y="${sy(gv)+3}" text-anchor="end" font-size="8" fill="#999">${gv.toFixed(1)}</text>`;}
+    let xLbl=labels.map((l,i)=>`<text x="${sx(i)+bw}" y="${svgH-4}" text-anchor="middle" font-size="7" fill="#999">${l}</text>`).join('');
+    html+=`<div class="fo-card" style="flex:1;min-width:280px;margin-bottom:10px"><div class="fo-card-h"><h3 style="font-size:12px">${cm.label}</h3><span style="font-size:9px;color:#999;margin-left:auto"><span style="color:${cm.col[0]};font-weight:700">■</span> Pilot <span style="color:${cm.col[1]};font-weight:700">■</span> Other</span></div><div style="padding:8px;overflow-x:auto"><svg width="${svgW}" height="${svgH}" style="display:block">${grid}${xLbl}<line x1="${padL}" y1="${padT+plotH}" x2="${svgW-padR}" y2="${padT+plotH}" stroke="#ccc"/>${bars}</svg></div></div>`;
+  });
+  html+=`</div>`;
+
+  document.getElementById("v-newstores").innerHTML=html;
+}
+
+// ════════════════════════════════════════════════════════════════════
+// ═══ BUSINESS METRICS MODULE ═══
+// ════════════════════════════════════════════════════════════════════
+const BM_WL=/*__BM_WL__*/;
+const BM_NW=/*__BM_NW__*/;
+const BM_ML=/*__BM_ML__*/;
+const BM_MR=/*__BM_MR__*/;
+const BM_W=/*__BM_W__*/;
+
+// Team for current month (depends on BM_ML)
+const _defTeam=TEAM_BY_MONTH[BM_ML[BM_ML.length-1]]||TEAM_BY_MONTH[BM_ML[BM_ML.length-2]]||{pilot:[],other:[],all:[]};
+let PN=_defTeam.pilot||[];
+let ON=_defTeam.other||[];
+function getTeam(monthLabel){return TEAM_BY_MONTH[monthLabel]||_defTeam}
+
+let bmGran='weekly';
+
+function bmSum(arr,idxs){return idxs.reduce((s,i)=>s+arr[i],0);}
+function fmtK(v){return v>=1000000?'₱'+(v/1000000).toFixed(2)+'M':v>=1000?'₱'+(v/1000).toFixed(0)+'K':'₱'+v.toFixed(0);}
+function fmtN(v){return v%1===0?v.toLocaleString():v.toFixed(1);}
+function fmtP(v){return '₱'+Math.round(v).toLocaleString();}
+
+
+// ═══ PLANS & RUN RATE ═══
+const PLAN_BY_MONTH=/*__PLAN_BY_MONTH__*/;
+
+// Monthly days config
+const MONTH_DAYS=/*__MONTH_DAYS__*/;
+
+if(window._plansMonth===undefined) window._plansMonth=BM_ML.length-1;
+if(window._plansSplit===undefined) window._plansSplit=true;
+
+function getMonthData(monthIdx){
+  const weeks=BM_MR[monthIdx];
+  const mLabel=BM_ML[monthIdx];
+  const md=MONTH_DAYS[mLabel]||{total:30,elapsed:30};
+  const res={};
+  ALL_ATS_LIST.forEach(n=>{
+    const bm=BM_W[n];if(!bm){res[n]={s:0,a:0,d:0,l:0,ap:0};return;}
+    let s=0,a=0,d=0,slSet=new Set(),saSet=new Set();
+    weeks.forEach(wi=>{s+=bm.s[wi]||0;a+=bm.a[wi]||0;d+=bm.d[wi]||0;});
+    let maxSl=0,maxSa=0;
+    weeks.forEach(wi=>{if((bm.sl[wi]||0)>maxSl)maxSl=bm.sl[wi]||0;if((bm.sa[wi]||0)>maxSa)maxSa=bm.sa[wi]||0;});
+    res[n]={s,a,d:Math.round(d),l:maxSl,ap:maxSa};
+  });
+  return {data:res,daysElapsed:md.elapsed,totalDays:md.total,label:mLabel};
+}
+
+function rPlans(){
+  const mi=window._plansMonth;
+  const isSplit=window._plansSplit;
+  const {data:MDATA,daysElapsed,totalDays,label:mLabel}=getMonthData(mi);
+  const team=getTeam(mLabel);
+  const _PN=team.pilot, _ON=team.other;
+  const PLAN=PLAN_BY_MONTH[mLabel]||PLAN_BY_MONTH[BM_ML[BM_ML.length-2]]||{};
+
+  function planData(name){
+    const f=MDATA[name]||{s:0,a:0,d:0,l:0,ap:0}, plan=PLAN[name]||1000000;
+    const actual=f.d, scored=f.s, approved=f.a, loans=f.l, apps=f.ap;
+    const pct=plan>0?actual/plan*100:0;
+    const rr=daysElapsed>0?actual/daysElapsed*totalDays:0;
+    const rrPct=plan>0?rr/plan*100:0;
+    const ar=scored?approved/scored*100:0;
+    let status,scl;
+    if(pct>=100){status="DONE";scl="sb-done";}
+    else if(rrPct>=75){status="ABOVE THRESHOLD";scl="sb-ahead";}
+    else{status="BELOW THRESHOLD";scl="sb-behind";}
+    return{name,plan,actual,pct,rr,rrPct,scored,approved,ar,loans,apps,status,scl,ip:_PN.includes(name)};
+  }
+
+  const all=[..._PN,..._ON].map(n=>planData(n));
+  const pGrp=all.filter(d=>d.ip), oGrp=all.filter(d=>!d.ip);
+  const timePct=daysElapsed/totalDays*100;
+
+  // Month selector
+  let mSel=`<select onchange="window._plansMonth=+this.value;rPlans();" style="padding:4px 10px;border:1px solid #ccc;border-radius:4px;font-size:12px;font-weight:600">`;
+  const _myr=m=>{const s=['Jan','Feb','Mar','Apr','May'];return s.includes(m)?'2026':'2025'};
+  BM_ML.forEach((m,i)=>{mSel+=`<option value="${i}"${i===mi?' selected':''}>${m} ${_myr(m)}</option>`;});
+  mSel+=`</select>`;
+
+  let h=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:13px;font-weight:700;color:#333">Plans & Run Rate</span>
+      ${mSel}
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="gran">
+        <button class="${isSplit?'on':''}" onclick="window._plansSplit=true;rPlans();">Pilot / Other</button>
+        <button class="${!isSplit?'on':''}" onclick="window._plansSplit=false;rPlans();">NCR Team</button>
+      </div>
+    </div>
+  </div>`;
+
+  // KPI cards
+  if(isSplit){
+    const pActual=pGrp.reduce((s,d)=>s+d.actual,0), pPlan=pGrp.reduce((s,d)=>s+d.plan,0);
+    const oActual=oGrp.reduce((s,d)=>s+d.actual,0), oPlan=oGrp.reduce((s,d)=>s+d.plan,0);
+    const pRR=daysElapsed>0?pActual/daysElapsed*totalDays:0, oRR=daysElapsed>0?oActual/daysElapsed*totalDays:0;
+    h+=`<div style="background:linear-gradient(135deg,#e8f0fe,#f0f4ff);border:2px solid #4e79a7;border-radius:8px;padding:20px 24px;margin-bottom:16px">
+      <div style="font-size:12px;color:#666;margin-bottom:14px">${mLabel} ${_myr(mLabel)} • ${daysElapsed} of ${totalDays} days elapsed (${timePct.toFixed(0)}%) • Run Rate = actual ÷ ${daysElapsed}d × ${totalDays}d</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+        <div style="background:#fff;border-radius:6px;padding:14px 18px;border-left:4px solid ${PC}">
+          <div style="font-size:11px;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Pilot Actual / Plan</div>
+          <div style="font-size:28px;font-weight:700;color:${PC}">${(pActual/pPlan*100).toFixed(1)}%</div>
+          <div class="pbar" style="margin-top:8px"><div class="pbar-fill" style="width:${Math.min(pActual/pPlan*100,100)}%;background:${PC}"></div></div>
+          <div style="font-size:12px;color:#666;margin-top:6px">₱${(pActual/1e6).toFixed(1)}M <span style="color:#999">/ ₱${(pPlan/1e6).toFixed(1)}M</span></div>
+          <div style="font-size:11px;color:#666;margin-top:2px">RR: ₱${(pRR/1e6).toFixed(1)}M (${(pRR/pPlan*100).toFixed(0)}%)</div>
+        </div>
+        <div style="background:#fff;border-radius:6px;padding:14px 18px;border-left:4px solid ${OC}">
+          <div style="font-size:11px;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Other Actual / Plan</div>
+          <div style="font-size:28px;font-weight:700;color:${OC}">${(oActual/oPlan*100).toFixed(1)}%</div>
+          <div class="pbar" style="margin-top:8px"><div class="pbar-fill" style="width:${Math.min(oActual/oPlan*100,100)}%;background:${OC}"></div></div>
+          <div style="font-size:12px;color:#666;margin-top:6px">₱${(oActual/1e6).toFixed(1)}M <span style="color:#999">/ ₱${(oPlan/1e6).toFixed(1)}M</span></div>
+          <div style="font-size:11px;color:#666;margin-top:2px">RR: ₱${(oRR/1e6).toFixed(1)}M (${(oRR/oPlan*100).toFixed(0)}%)</div>
+        </div>
+        <div style="background:#fff;border-radius:6px;padding:14px 18px;border-left:4px solid ${GC}">
+          <div style="font-size:11px;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Done / Above</div>
+          <div style="font-size:24px;font-weight:700;color:${GC}">${all.filter(d=>d.rrPct>=75||d.pct>=100).length} <span style="font-size:14px;color:#999">of ${all.length}</span></div>
+        </div>
+        <div style="background:#fff;border-radius:6px;padding:14px 18px;border-left:4px solid ${RC}">
+          <div style="font-size:11px;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Below Threshold</div>
+          <div style="font-size:24px;font-weight:700;color:${RC}">${all.filter(d=>d.rrPct<75&&d.pct<100).length} <span style="font-size:14px;color:#999">of ${all.length}</span></div>
+        </div>
+      </div>
+    </div>`;
+  } else {
+    const tActual=all.reduce((s,d)=>s+d.actual,0), tPlan=all.reduce((s,d)=>s+d.plan,0);
+    const tRR=daysElapsed>0?tActual/daysElapsed*totalDays:0;
+    h+=`<div style="background:linear-gradient(135deg,#f0f0f0,#fafafa);border:2px solid #555;border-radius:8px;padding:20px 24px;margin-bottom:16px">
+      <div style="font-size:12px;color:#666;margin-bottom:14px">${mLabel} ${_myr(mLabel)} • ${daysElapsed} of ${totalDays} days elapsed (${timePct.toFixed(0)}%) • Run Rate = actual ÷ ${daysElapsed}d × ${totalDays}d</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+        <div style="background:#fff;border-radius:6px;padding:14px 18px;border-left:4px solid #555">
+          <div style="font-size:11px;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">NCR Team Actual / Plan</div>
+          <div style="font-size:28px;font-weight:700;color:#333">${(tActual/tPlan*100).toFixed(1)}%</div>
+          <div class="pbar" style="margin-top:8px"><div class="pbar-fill" style="width:${Math.min(tActual/tPlan*100,100)}%;background:#555"></div></div>
+          <div style="font-size:12px;color:#666;margin-top:6px">₱${(tActual/1e6).toFixed(1)}M <span style="color:#999">/ ₱${(tPlan/1e6).toFixed(1)}M</span></div>
+          <div style="font-size:11px;color:#666;margin-top:2px">RR: ₱${(tRR/1e6).toFixed(1)}M (${(tRR/tPlan*100).toFixed(0)}%)</div>
+        </div>
+        <div style="background:#fff;border-radius:6px;padding:14px 18px;border-left:4px solid #555">
+          <div style="font-size:11px;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Avg per ATS</div>
+          <div style="font-size:28px;font-weight:700;color:#333">₱${(tActual/all.length/1e3).toFixed(0)}K</div>
+          <div style="font-size:11px;color:#666;margin-top:4px">Plan avg: ₱${(tPlan/all.length/1e3).toFixed(0)}K</div>
+        </div>
+        <div style="background:#fff;border-radius:6px;padding:14px 18px;border-left:4px solid ${GC}">
+          <div style="font-size:11px;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Done / Above</div>
+          <div style="font-size:24px;font-weight:700;color:${GC}">${all.filter(d=>d.rrPct>=75||d.pct>=100).length} <span style="font-size:14px;color:#999">of ${all.length}</span></div>
+        </div>
+        <div style="background:#fff;border-radius:6px;padding:14px 18px;border-left:4px solid ${RC}">
+          <div style="font-size:11px;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Below Threshold</div>
+          <div style="font-size:24px;font-weight:700;color:${RC}">${all.filter(d=>d.rrPct<75&&d.pct<100).length} <span style="font-size:14px;color:#999">of ${all.length}</span></div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // Detail table
+  const sorted=[...all].sort((a,b)=>b.rrPct-a.rrPct);
+  let t=`<table><thead><tr>
+    <th style="text-align:left">ATS Name</th>${isSplit?'<th>Group</th>':''}<th style="text-align:right">Plan (₱)</th>
+    <th style="text-align:right">Actual (₱)</th><th>Progress</th><th style="text-align:right">Run Rate (₱)</th>
+    <th>RR vs Plan</th><th>Status</th>
+    <th style="text-align:right">Scored</th><th style="text-align:right">Approved</th><th style="text-align:right">AR%</th>
+    <th style="text-align:right">Stores w/ Loans</th><th style="text-align:right">Stores w/ Apps</th>
+  </tr></thead><tbody>`;
+
+  sorted.forEach((d,ri)=>{
+    const barW=Math.min(d.pct,100);
+    const barC=d.pct>=100?GC:d.rrPct>=75?PC:RC;
+    const rrC=d.rrPct>=75?GC:RC;
+    t+=`<tr class="${ri%2===0?'alt':''}">
+      <td style="font-weight:600;white-space:nowrap">${d.name}</td>
+      ${isSplit?`<td style="text-align:center"><span style="display:inline-block;width:8px;height:8px;border-radius:1px;background:${d.ip?PC:OC};margin-right:4px"></span>${d.ip?"Pilot":"Other"}</td>`:''}
+      <td style="text-align:right;font-weight:500">₱${(d.plan/1e6).toFixed(2)}M</td>
+      <td style="text-align:right;font-weight:700">₱${(d.actual/1e6).toFixed(2)}M</td>
+      <td style="min-width:120px"><div style="display:flex;align-items:center;gap:6px"><div class="pbar" style="flex:1"><div class="pbar-fill" style="width:${barW}%;background:${barC}"></div></div><span style="font-size:11px;font-weight:700;color:${barC}">${d.pct.toFixed(0)}%</span></div></td>
+      <td style="text-align:right;font-weight:600;color:${rrC}">₱${(d.rr/1e6).toFixed(2)}M</td>
+      <td style="text-align:center;font-weight:700;color:${rrC}">${d.rrPct.toFixed(0)}%</td>
+      <td style="text-align:center"><span class="status-badge ${d.scl}">${d.status}</span></td>
+      <td style="text-align:right">${d.scored}</td>
+      <td style="text-align:right">${d.approved}</td>
+      <td style="text-align:right;font-weight:600">${d.ar.toFixed(1)}%</td>
+      <td style="text-align:right">${d.loans}</td>
+      <td style="text-align:right">${d.apps}</td>
+    </tr>`;
+  });
+
+  // Totals
+  if(isSplit){
+    [{lb:"Pilot Total",grp:pGrp,c:PC},{lb:"Other Total",grp:oGrp,c:OC}].forEach(g=>{
+      const plan=g.grp.reduce((s,d)=>s+d.plan,0), act=g.grp.reduce((s,d)=>s+d.actual,0);
+      const rr=daysElapsed>0?act/daysElapsed*totalDays:0;
+      const sc=g.grp.reduce((s,d)=>s+d.scored,0), ap=g.grp.reduce((s,d)=>s+d.approved,0);
+      const ln=g.grp.reduce((s,d)=>s+d.loans,0), apps=g.grp.reduce((s,d)=>s+d.apps,0);
+      t+=`<tr class="sum"><td style="color:${g.c}">${g.lb}</td><td></td>
+        <td style="text-align:right">₱${(plan/1e6).toFixed(2)}M</td>
+        <td style="text-align:right">₱${(act/1e6).toFixed(2)}M</td>
+        <td style="font-weight:700;text-align:center">${(act/plan*100).toFixed(0)}%</td>
+        <td style="text-align:right;color:${g.c}">₱${(rr/1e6).toFixed(2)}M</td>
+        <td style="text-align:center;font-weight:700;color:${g.c}">${(rr/plan*100).toFixed(0)}%</td>
+        <td></td>
+        <td style="text-align:right">${sc}</td><td style="text-align:right">${ap}</td>
+        <td style="text-align:right;font-weight:700">${sc?(ap/sc*100).toFixed(1):0}%</td>
+        <td style="text-align:right">${ln}</td><td style="text-align:right">${apps}</td></tr>`;
+    });
+  } else {
+    const plan=all.reduce((s,d)=>s+d.plan,0), act=all.reduce((s,d)=>s+d.actual,0);
+    const rr=daysElapsed>0?act/daysElapsed*totalDays:0;
+    const sc=all.reduce((s,d)=>s+d.scored,0), ap=all.reduce((s,d)=>s+d.approved,0);
+    const ln=all.reduce((s,d)=>s+d.loans,0), apps=all.reduce((s,d)=>s+d.apps,0);
+    t+=`<tr class="sum"><td style="color:#333;font-weight:700">Grand Total</td>
+      <td style="text-align:right">₱${(plan/1e6).toFixed(2)}M</td>
+      <td style="text-align:right">₱${(act/1e6).toFixed(2)}M</td>
+      <td style="font-weight:700;text-align:center">${(act/plan*100).toFixed(0)}%</td>
+      <td style="text-align:right;font-weight:700">₱${(rr/1e6).toFixed(2)}M</td>
+      <td style="text-align:center;font-weight:700">${(rr/plan*100).toFixed(0)}%</td>
+      <td></td>
+      <td style="text-align:right">${sc}</td><td style="text-align:right">${ap}</td>
+      <td style="text-align:right;font-weight:700">${sc?(ap/sc*100).toFixed(1):0}%</td>
+      <td style="text-align:right">${ln}</td><td style="text-align:right">${apps}</td></tr>`;
+  }
+  t+=`</tbody></table>`;
+
+  h+=`<div class="row r1">`+sh("Individual ATS Performance","Sorted by Run Rate projection",`<div style="overflow-x:auto">${t}</div>`)+`</div>`;
+  document.getElementById("v-plans").innerHTML=h;
+
+  requestAnimationFrame(()=>{
+  });
+}
+
+// ═══ CHURN RATE TAB ═══
+const CH_ML=/*__CH_ML__*/;
+const CH_LOAN=/*__CH_LOAN__*/;
+const CH_APPS_ACTIVE=/*__CH_APPS_ACTIVE__*/;
+const CH_APPS_NEW=/*__CH_APPS_NEW__*/;
+const CH_APPS_REACT=/*__CH_APPS_REACT__*/;
+const CH_APPS_CHURN=/*__CH_APPS_CHURN__*/;
+
+function rChurn(){
+  const fullLabels=CH_ML;
+  const si=0;
+  const labels=fullLabels;
+  const pAvgLoan=labels.map((_,i)=>{const v=PN.map(n=>(CH_LOAN[n]||[])[i]||0);return +(v.reduce((a,b)=>a+b,0)/v.length).toFixed(1);});
+  const oAvgLoan=labels.map((_,i)=>{const v=ON.map(n=>(CH_LOAN[n]||[])[i]||0);return +(v.reduce((a,b)=>a+b,0)/v.length).toFixed(1);});
+
+  let h='';
+
+  h+=`<div class="row r1">`;
+  h+=sh("Avg Churn Rate by COMBO Disbursement","Pilot vs Other NCR — monthly %",cv("ch1"));
+  h+=`</div>`;
+
+  const allN=[...PN,...ON];
+  function churnTable(data, title){
+    const tLabels=fullLabels;
+    let t='<table><thead><tr><th style="text-align:left;position:sticky;left:0;background:#fff;z-index:2;padding:6px 8px;white-space:normal;word-break:break-word;line-height:1.2">ATS Name</th>';
+    tLabels.forEach(m=>t+=`<th style="text-align:center;min-width:60px;font-size:9px">${m}</th>`);
+    t+='<th style="text-align:center;background:#eef1f6;min-width:50px;font-size:9px">Avg</th></tr></thead><tbody>';
+
+    function renderChurnGroup(label, group, gc){
+      t+=`<tr><td colspan="${1+tLabels.length+1}" style="background:${gc};color:#fff;font-weight:700;font-size:10px;letter-spacing:0.5px;padding:4px 10px">${label}</td></tr>`;
+      group.forEach(n=>{
+        const vals=data[n]||new Array(tLabels.length).fill(0);
+        const avg=+(vals.reduce((s,v)=>s+v,0)/vals.length).toFixed(1);
+        t+='<tr style="border-bottom:1px solid #eee">';
+        t+=`<td style="font-weight:600;white-space:nowrap;font-size:11px;position:sticky;left:0;background:#fff;z-index:1">${n}</td>`;
+        vals.forEach(v=>{const col=v>=30?'#c5221f':v>=20?'#e37400':v>=10?'#333':'#0d7c5f';t+=`<td style="text-align:center;font-size:11px;color:${col};font-weight:${v>=25?700:400}">${v}%</td>`;});
+        t+=`<td style="text-align:center;background:#f7f8fb;font-weight:700;font-size:11px">${avg}%</td></tr>`;
+      });
+      t+=`<tr><td style="height:2px;background:${gc}"></td><td colspan="${tLabels.length+1}" style="height:2px;background:${gc}"></td></tr>`;
+      t+='<tr class="fo-rt" style="border-bottom:3px solid #333">';
+      t+=`<td style="font-size:10px;font-weight:700;position:sticky;left:0;background:#fff;z-index:1">${label} Avg</td>`;
+      tLabels.forEach((_,i)=>{
+        const v=+(group.map(n=>(data[n]||[])[i]||0).reduce((a,b)=>a+b,0)/group.length).toFixed(1);
+        const col=v>=30?'#c5221f':v>=20?'#e37400':v>=10?'#333':'#0d7c5f';
+        t+=`<td style="text-align:center;font-size:11px;font-weight:700;color:${col}">${v}%</td>`;
+      });
+      const gAvg=+(group.map(n=>{const v=data[n]||[];return v.length?v.reduce((s,x)=>s+x,0)/v.length:0}).reduce((a,b)=>a+b,0)/group.length).toFixed(1);
+      t+=`<td style="text-align:center;background:#f7f8fb;font-weight:700;font-size:11px">${gAvg}%</td></tr>`;
+    }
+
+    renderChurnGroup('Pilot', PN, PC);
+    renderChurnGroup('Other NCR', ON, OC);
+
+    t+='</tbody></table>';
+    return `<div class="row r1">`+sh(title,"Pilot / Other NCR — monthly churn rate %",`<div style="overflow-x:auto">${t}</div>`)+`</div>`;
+  }
+
+  h+=churnTable(CH_LOAN,"Churn Rate by Loan — Individual Breakdown");
+
+  /* ── Stores w Apps table ── */
+  if(CH_ML.length && Object.keys(CH_APPS_ACTIVE).length){
+    const metricsA=[
+      {key:'active',label:'Stores w Apps',color:'#333'},
+      {key:'new',label:'New Stores w App',color:'#0d7c5f'},
+      {key:'react',label:'Reactivated',color:'#4e79a7'},
+      {key:'churn',label:'Churn w App',color:'#c5221f'}
+    ];
+    const dataMap={active:CH_APPS_ACTIVE,new:CH_APPS_NEW,react:CH_APPS_REACT,churn:CH_APPS_CHURN};
+    const mLen=metricsA.length;
+
+    let at='<table><thead><tr><th style="text-align:left;position:sticky;left:0;background:#fff;z-index:2;padding:6px 8px;white-space:normal;word-break:break-word;line-height:1.2">ATS Name</th><th style="position:sticky;left:clamp(200px,18vw,260px);background:#fff;z-index:2;padding:6px 8px">Metric</th>';
+    CH_ML.forEach(m=>at+=`<th style="text-align:center;min-width:60px;font-size:9px">${m}</th>`);
+    at+='</tr></thead><tbody>';
+
+    /* Render one group */
+    function renderGroup(label, group, gc){
+      /* Group header */
+      at+=`<tr><td colspan="${2+CH_ML.length}" style="background:${gc};color:#fff;font-weight:700;font-size:10px;letter-spacing:0.5px;padding:4px 10px">${label}</td></tr>`;
+      /* Individual ATS */
+      group.forEach(n=>{
+        metricsA.forEach(({key,label:mLabel,color},mi)=>{
+          const isFirst=mi===0, isLast=mi===mLen-1;
+          at+=`<tr${isLast?' style="border-bottom:2px solid #e8e8e8"':''}>`; 
+          if(isFirst) at+=`<td rowspan="${mLen}" style="font-weight:600;white-space:nowrap;font-size:11px;vertical-align:top;padding-top:8px;position:sticky;left:0;background:#fff;z-index:1">${n}</td>`;
+          at+=`<td style="font-size:11px;color:${color};position:sticky;left:var(--bm-c1w);background:#fff;z-index:1">${mLabel}</td>`;
+          CH_ML.forEach((_,i)=>{
+            const v=(dataMap[key][n]||[])[i]||0;
+            const fc=key==='churn'&&v>0?'#c5221f':key==='new'&&v>0?'#0d7c5f':key==='react'&&v>0?'#4e79a7':'#333';
+            at+=`<td style="text-align:center;font-size:11px;color:${v?fc:'#ddd'};font-weight:${key==='churn'&&v>0?700:400}">${v||'·'}</td>`;
+          });
+          at+='</tr>';
+        });
+      });
+      /* Group total */
+      at+=`<tr><td colspan="2" style="height:2px;background:${gc}"></td><td colspan="${CH_ML.length}" style="height:2px;background:${gc}"></td></tr>`;
+      metricsA.forEach(({key,label:mLabel,color},mi)=>{
+        at+=`<tr class="fo-rt"${mi===mLen-1?' style="border-bottom:3px solid #333"':''}>`;
+        if(mi===0) at+=`<td rowspan="${mLen}" style="vertical-align:top;font-size:10px;font-weight:700;padding-top:6px;position:sticky;left:0;background:#fff;z-index:1">${label} Total</td>`;
+        at+=`<td style="font-size:10px;color:${color};font-weight:700;position:sticky;left:var(--bm-c1w);background:#fff;z-index:1">${mLabel}</td>`;
+        CH_ML.forEach((_,i)=>{
+          let sum=0; group.forEach(n=>{sum+=(dataMap[key][n]||[])[i]||0});
+          const fc=key==='churn'&&sum>0?'#c5221f':key==='new'&&sum>0?'#0d7c5f':key==='react'&&sum>0?'#4e79a7':'#333';
+          at+=`<td style="text-align:center;font-size:11px;font-weight:700;color:${sum?fc:'#ddd'}">${sum||'·'}</td>`;
+        });
+        at+='</tr>';
+      });
+    }
+
+    renderGroup('Pilot', PN, PC);
+    renderGroup('Other NCR', ON, OC);
+
+    at+='</tbody></table>';
+    h+=`<div class="row r1">`+sh("Stores w Apps — Monthly Dynamics","Active / New / Reactivated / Churn by Applications Scored",`<div style="overflow-x:auto">${at}</div>`)+`</div>`;
+  }
+
+  document.getElementById("v-churn").innerHTML=h;
+
+  requestAnimationFrame(()=>{
+    const lgB={position:'bottom',labels:{usePointStyle:true,padding:14,font:{size:11}}};
+    mc("ch1","bar",{labels,datasets:[
+      bDs("Pilot Avg",pAvgLoan,PC),bDs("Other Avg",oAvgLoan,OC)
+    ]},{layout:{padding:{top:24}},scales:{x:{grid:{display:false}},y:{display:false,beginAtZero:true,max:Math.max(...pAvgLoan,...oAvgLoan)*1.2}},plugins:{legend:lgB,tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.raw+'%'}},datalabels:{display:true,anchor:'end',align:'top',font:{size:10,weight:'bold'},formatter:v=>v+'%'}}});
+  });
+}
+
+// ─── NAV ───
+function go(v){curV=v;document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.v===v));["bizmetrics","plans","newstores","churn","fieldops"].forEach(x=>{document.getElementById("v-"+x).classList.toggle("hd",x!==v);});
+  document.getElementById("fbar").style.display=(v==="fieldops"||v==="churn"||v==="bizmetrics"||v==="newstores")?"none":"";
+  render();
+}
+function setGran(g){curG=g;periodIdx=-1;document.querySelectorAll(".gran button").forEach(b=>b.classList.toggle("on",b.dataset.g===g));render();}
+function render(){if(curV==='fieldops')return;if(curV==='bizmetrics'){rBizMetrics();return;}({newstores:rNewStores,plans:rPlans,churn:rChurn})[curV]();}
+document.getElementById("tabs").addEventListener("click",e=>{if(e.target.dataset.v)go(e.target.dataset.v);});
+document.getElementById("gran").addEventListener("click",e=>{if(e.target.dataset.g)setGran(e.target.dataset.g);});
+
+
+
+function rBizMetrics(){
+  const el=document.getElementById('v-bizmetrics');
+  const labels=bmGran==='weekly'?BM_WL:BM_ML;
+  const ranges=bmGran==='weekly'?BM_WL.map((_,i)=>[i]):BM_MR;
+  let show=labels,ri=ranges;
+  const NP=ri.length;
+  const metrics=[
+    {key:'sa',label:'Stores w App',fn:(d,r)=>bmSum(d.sa,r),fmt:v=>fmtN(v),col:'#4e79a7'},
+    {key:'sl',label:'Stores w Loan',fn:(d,r)=>bmSum(d.sl,r),fmt:v=>fmtN(v),col:'#0d7c5f'},
+    {key:'s',label:'Applications scored',fn:(d,r)=>bmSum(d.s,r),fmt:v=>fmtN(v),col:'#7b1fa2'},
+    {key:'a',label:'Applications approved',fn:(d,r)=>bmSum(d.a,r),fmt:v=>fmtN(v),col:'#e37400'},
+    {key:'d',label:'COMBO Disbursement',fn:(d,r)=>bmSum(d.d,r),fmt:v=>fmtP(v),col:'#c5221f'}
+  ];
+  const psMetrics=[
+    {key:'sps',label:'Scored / Store',fn:(d,r)=>{const sa=bmSum(d.sa,r);return sa?bmSum(d.s,r)/sa:0;},fmt:v=>v.toFixed(1),col:'#7b1fa2'},
+    {key:'aps',label:'Approved / Store',fn:(d,r)=>{const sa=bmSum(d.sa,r);return sa?bmSum(d.a,r)/sa:0;},fmt:v=>v.toFixed(1),col:'#e37400'},
+    {key:'dps',label:'Disbursement / Store',fn:(d,r)=>{const sl=bmSum(d.sl,r);return sl?bmSum(d.d,r)/sl:0;},fmt:v=>fmtP(v),col:'#c5221f'}
+  ];
+
+  // ═══ SPLIT MODE ═══
+  if(window._bmSplit===undefined) window._bmSplit=true;
+  const isSplit=window._bmSplit;
+
+  let html=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+    <div style="font-size:13px;font-weight:700;color:#333">Business Metrics · ${BM_WL[0]} – ${BM_WL[BM_NW-1]}</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button onclick="genSnapshot()" style="padding:5px 14px;background:#4e79a7;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600">📊 Snapshot</button>
+      <div class="gran">
+        <button class="${isSplit?'on':''}" onclick="window._bmSplit=true;rBizMetrics();">Pilot / Other</button>
+        <button class="${!isSplit?'on':''}" onclick="window._bmSplit=false;rBizMetrics();">NCR Team</button>
+      </div>
+      <div class="gran" id="bmGran">
+        <button class="${bmGran==='weekly'?'on':''}" onclick="bmSetGran('weekly')">Weekly</button>
+        <button class="${bmGran==='monthly'?'on':''}" onclick="bmSetGran('monthly')">Monthly</button>
+      </div>
+    </div>
+  </div>`;
+
+  // ═══ FILTER STATE ═══
+  const allATS=[...PN,...ON];
+  if(!window._bmF) window._bmF={
+    t1:{m:{sa:1,sl:1,s:1,a:1,d:1},ats:Object.fromEntries(allATS.map(n=>[n,1]))},
+    t3:{m:{sps:1,aps:1,dps:1},ats:Object.fromEntries(allATS.map(n=>[n,1]))},
+    t5:{m:{swa:1,swl:1,as:1,aa:1,di:1,ss:1,aps2:1,ds:1},ats:{}}
+  };
+  const BF=window._bmF;
+
+  function mkFilterBtn(tableId,metricList,atsList,hasAts){
+    const st=BF[tableId];
+    const nM=Object.values(st.m).filter(v=>v).length;
+    const nA=hasAts?atsList.filter(n=>st.ats[n]).length:0;
+    const totM=metricList.length;
+    const totA=hasAts?atsList.length:0;
+    let h=`<div style="position:relative;display:inline-block">
+      <button onclick="document.getElementById('bfd_${tableId}').classList.toggle('hd')" style="padding:5px 14px;font-size:11px;border:1px solid #ccc;border-radius:5px;background:#fff;cursor:pointer;display:flex;align-items:center;gap:5px;font-weight:600">
+        <span style="font-size:13px">⚙</span> Filter <span style="background:#4e79a7;color:#fff;border-radius:10px;padding:1px 6px;font-size:9px;font-weight:700">${nM}/${totM}${hasAts?' · '+nA+'/'+totA:''}</span>
+      </button>
+      <div id="bfd_${tableId}" class="hd" style="position:absolute;top:100%;left:0;background:#fff;border:1px solid #ddd;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.15);padding:8px 6px 6px;z-index:20;min-width:220px;margin-top:4px;max-height:480px;overflow:auto">
+        <div style="font-size:10px;font-weight:700;color:#999;padding:2px 10px;text-transform:uppercase">Metrics</div>`;
+    metricList.forEach(cm=>{
+      h+=`<label style="display:flex;align-items:center;gap:7px;padding:4px 10px;cursor:pointer;font-size:12px;border-radius:3px" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">
+        <input type="checkbox" data-f="${tableId}" data-t="m" data-k="${cm.key}" ${st.m[cm.key]?'checked':''} style="width:15px;height:15px;accent-color:${cm.col||'#4e79a7'};cursor:pointer">
+        <span style="color:${cm.col||'#333'};font-weight:600">${cm.label}</span>
+      </label>`;
+    });
+    if(hasAts){
+      h+=`<div style="border-top:1px solid #eee;margin-top:6px;padding-top:6px">
+        <div style="font-size:10px;font-weight:700;color:#999;padding:2px 10px;text-transform:uppercase;display:flex;justify-content:space-between">
+          <span>ATS</span>
+          <span style="cursor:pointer;color:#4e79a7" onclick="const cb=document.querySelectorAll('input[data-f=\\'${tableId}\\'][data-t=\\'a\\']');const allOn=[...cb].every(c=>c.checked);cb.forEach(c=>c.checked=!allOn)">toggle all</span>
+        </div>`;
+      atsList.forEach(n=>{
+        const isPilot=PN.includes(n);
+        const col=isPilot?'#4e79a7':'#f28e2b';
+        h+=`<label style="display:flex;align-items:center;gap:7px;padding:3px 10px;cursor:pointer;font-size:11px;border-radius:3px" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">
+          <input type="checkbox" data-f="${tableId}" data-t="a" data-k="${n}" ${st.ats[n]?'checked':''} style="width:14px;height:14px;accent-color:${col};cursor:pointer">
+          <span style="color:${col}">${n}</span>
+        </label>`;
+      });
+      h+=`</div>`;
+    }
+    h+=`<div style="padding:6px 6px 2px;margin-top:6px;border-top:1px solid #eee">
+      <button onclick="document.querySelectorAll('input[data-f=\\'${tableId}\\'][data-t=\\'m\\']').forEach(c=>window._bmF['${tableId}'].m[c.dataset.k]=c.checked?1:0);document.querySelectorAll('input[data-f=\\'${tableId}\\'][data-t=\\'a\\']').forEach(c=>window._bmF['${tableId}'].ats[c.dataset.k]=c.checked?1:0);document.getElementById('bfd_${tableId}').classList.add('hd');rBizMetrics();" style="width:100%;padding:7px 0;background:#4e79a7;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:12px;font-weight:700">Apply</button>
+    </div></div></div>`;
+    return h;
+  }
+
+  function mkTable(title,mList,nameGroups,tableId){
+    // nameGroups: [{names,label,col},...] — one group if combined, two if split
+    const st=BF[tableId];
+    const visMet=mList.filter(m=>st.m[m.key]);
+    const mLen=visMet.length;
+    if(mLen===0) return `<div class="fo-card" style="margin-bottom:16px"><div class="fo-card-h" style="display:flex;align-items:center;gap:12px"><h3>${title}</h3>${mkFilterBtn(tableId,mList,allATS,true)}</div><div class="fo-card-b" style="padding:20px;color:#999;font-size:12px">No metrics selected. Open Filter to enable metrics.</div></div>`;
+    const filterBtn=mkFilterBtn(tableId,mList,allATS,true);
+    let th=`<th class="bm-c1"></th><th class="bm-c2"></th>`+show.map(l=>`<th class="fo-n" style="font-size:9px;min-width:60px">${l}</th>`).join('');
+    let body='';
+    nameGroups.forEach(grp=>{
+      const visNames=grp.names.filter(n=>st.ats[n]);
+      if(visNames.length===0) return;
+      body+=`<tr><td class="bm-c1 bm-gh" colspan="2" style="background:${grp.col};color:#fff;font-weight:700;font-size:10px;letter-spacing:0.5px;z-index:4">${grp.label}</td><td colspan="${NP}" style="background:${grp.col}"></td></tr>`;
+      visNames.forEach(name=>{
+        const d=BM_W[name];if(!d)return;
+        visMet.forEach((m,mi)=>{
+          const isFirst=mi===0;
+          const isLast=mi===mLen-1;
+          let row='<tr'+(isLast?' style="border-bottom:2px solid #e8e8e8"':'')+'>';
+          if(isFirst) row+=`<td class="bm-c1" rowspan="${mLen}" style="vertical-align:top;font-size:11px;font-weight:600;padding-top:8px">${name}</td>`;
+          row+=`<td class="bm-c2" style="font-size:11px;color:#666">${m.label}</td>`;
+          ri.forEach(r=>{
+            const v=m.fn(d,r);
+            row+=`<td class="fo-n${v===0?' fo-n0':''}" style="font-size:11px">${v===0?'':m.fmt(v)}</td>`;
+          });
+          row+='</tr>';body+=row;
+        });
+      });
+      // Group total
+      body+=`<tr><td class="bm-c1" style="height:2px;background:${grp.col}"></td><td class="bm-c2" style="height:2px;background:${grp.col}"></td><td colspan="${NP}" style="height:2px;background:${grp.col}"></td></tr>`;
+      visMet.forEach((m,mi)=>{
+        let row='<tr class="fo-rt"'+(mi===mLen-1?' style="border-bottom:3px solid #333"':'')+'>';
+        if(mi===0) row+=`<td class="bm-c1" rowspan="${mLen}" style="vertical-align:top;font-size:10px;font-weight:700;padding-top:6px">${grp.label} Total</td>`;
+        row+=`<td class="bm-c2" style="font-size:10px;color:#666">${m.label}</td>`;
+        ri.forEach(r=>{
+          let total=0;visNames.forEach(n=>{const d=BM_W[n];if(d)total+=m.fn(d,r);});
+          row+=`<td class="fo-n" style="font-size:10px;font-weight:700">${total===0?'':m.fmt(total)}</td>`;
+        });
+        row+='</tr>';body+=row;
+      });
+    });
+    return `<div class="fo-card" style="margin-bottom:16px"><div class="fo-card-h" style="display:flex;align-items:center;gap:12px"><h3>${title}</h3>${filterBtn}</div><div class="fo-card-b" style="max-height:600px;overflow:auto"><table class="bm-tbl"><thead><tr>${th}</tr></thead><tbody>${body}</tbody></table></div></div>`;
+  }
+
+  if(isSplit){
+    html+=mkTable('Absolute Metrics — Pilot',metrics,[{names:PN,label:'Pilot',col:'#4e79a7'}],'t1');
+    html+=mkTable('Absolute Metrics — Other',metrics,[{names:ON,label:'Other NCR',col:'#f28e2b'}],'t1');
+    html+=mkTable('Per Active Store — Pilot',psMetrics,[{names:PN,label:'Pilot',col:'#4e79a7'}],'t3');
+    html+=mkTable('Per Active Store — Other',psMetrics,[{names:ON,label:'Other NCR',col:'#f28e2b'}],'t3');
+
+    // ── Pilot vs Other — Avg per ATS comparison (split only) ──
+    (function(){
+      const nP=PN.length, nO=ON.length;
+      const compMetrics=[
+        {label:'Stores w App',key:'swa',fn:(d,r)=>bmSum(d.sa,r),fmt:v=>v.toFixed(1),col:'#4e79a7'},
+        {label:'Stores w Loan',key:'swl',fn:(d,r)=>bmSum(d.sl,r),fmt:v=>v.toFixed(1),col:'#0d7c5f'},
+        {label:'Apps Scored',key:'as',fn:(d,r)=>bmSum(d.s,r),fmt:v=>v.toFixed(1),col:'#7b1fa2'},
+        {label:'Apps Approved',key:'aa',fn:(d,r)=>bmSum(d.a,r),fmt:v=>v.toFixed(1),col:'#e37400'},
+        {label:'Disbursement',key:'di',fn:(d,r)=>bmSum(d.d,r),fmt:v=>fmtK(v),col:'#c5221f'},
+        {label:'Scored / Store',key:'ss',fn:(d,r)=>{const sa=bmSum(d.sa,r);return sa?bmSum(d.s,r)/sa:0;},fmt:v=>v.toFixed(2),col:'#7b1fa2'},
+        {label:'Approved / Store',key:'aps2',fn:(d,r)=>{const sa=bmSum(d.sa,r);return sa?bmSum(d.a,r)/sa:0;},fmt:v=>v.toFixed(2),col:'#e37400'},
+        {label:'Disb / Store',key:'ds',fn:(d,r)=>{const sl=bmSum(d.sl,r);return sl?bmSum(d.d,r)/sl:0;},fmt:v=>fmtK(v),col:'#c5221f'}
+      ];
+      const st5=BF.t5;
+      const visibleMetrics=compMetrics.filter(cm=>st5.m[cm.key]);
+      const filterBtn5=mkFilterBtn('t5',compMetrics,[],false);
+      if(visibleMetrics.length===0){
+        html+=`<div class="fo-card" style="margin-bottom:16px"><div class="fo-card-h" style="display:flex;align-items:center;gap:12px"><h3>Pilot vs Other — Avg per ATS</h3>${filterBtn5}</div><div class="fo-card-b" style="padding:20px;color:#999;font-size:12px">No metrics selected.</div></div>`;
+      } else {
+        let th=`<th class="bm-c1" style="min-width:100px"></th><th class="bm-c2"></th>`+show.map(l=>`<th class="fo-n" style="font-size:9px;min-width:60px">${l}</th>`).join('')+`<th class="fo-n" style="font-size:9px;min-width:60px;background:#eef1f6;font-weight:700">Avg</th>`;
+        let body='';
+        visibleMetrics.forEach(cm=>{
+          let pRow=`<tr><td class="bm-c1" rowspan="3" style="vertical-align:top;font-size:11px;font-weight:600;padding-top:8px;color:${cm.col}">${cm.label}</td>`;
+          pRow+=`<td class="bm-c2" style="font-size:11px;color:#4e79a7;font-weight:600">Pilot</td>`;
+          let pSum=0;
+          ri.forEach(r=>{let t=0;PN.forEach(n=>{const d=BM_W[n];if(d)t+=cm.fn(d,r);});const avg=t/nP;pSum+=avg;pRow+=`<td class="fo-n" style="font-size:11px;color:#4e79a7">${avg===0?'':cm.fmt(avg)}</td>`;});
+          const pAvg=pSum/ri.length;
+          pRow+=`<td class="fo-n" style="font-size:11px;font-weight:700;background:#f7f8fb;color:#4e79a7">${cm.fmt(pAvg)}</td></tr>`;
+          let oRow=`<tr><td class="bm-c2" style="font-size:11px;color:#f28e2b;font-weight:600">Other</td>`;
+          let oSum=0;
+          ri.forEach(r=>{let t=0;ON.forEach(n=>{const d=BM_W[n];if(d)t+=cm.fn(d,r);});const avg=t/nO;oSum+=avg;oRow+=`<td class="fo-n" style="font-size:11px;color:#f28e2b">${avg===0?'':cm.fmt(avg)}</td>`;});
+          const oAvg=oSum/ri.length;
+          oRow+=`<td class="fo-n" style="font-size:11px;font-weight:700;background:#f7f8fb;color:#f28e2b">${cm.fmt(oAvg)}</td></tr>`;
+          let dRow=`<tr style="border-bottom:2px solid #e8e8e8"><td class="bm-c2" style="font-size:10px;color:#666">Δ Pilot vs Other</td>`;
+          ri.forEach(r=>{let tp=0,to=0;PN.forEach(n=>{const d=BM_W[n];if(d)tp+=cm.fn(d,r);});ON.forEach(n=>{const d=BM_W[n];if(d)to+=cm.fn(d,r);});const pa=tp/nP,oa=to/nO;const delta=oa>0?((pa/oa-1)*100):0;const dc=delta>=0?'#0d7c5f':'#c5221f';dRow+=`<td class="fo-n" style="font-size:10px;font-weight:700;color:${dc}">${delta===0?'':(delta>=0?'+':'')+delta.toFixed(0)+'%'}</td>`;});
+          const gDelta=oAvg>0?((pAvg/oAvg-1)*100):0;const gdc=gDelta>=0?'#0d7c5f':'#c5221f';
+          dRow+=`<td class="fo-n" style="font-size:10px;font-weight:700;background:#f7f8fb;color:${gdc}">${gDelta===0?'':(gDelta>=0?'+':'')+gDelta.toFixed(0)+'%'}</td></tr>`;
+          body+=pRow+oRow+dRow;
+        });
+        html+=`<div class="fo-card" style="margin-bottom:16px"><div class="fo-card-h" style="display:flex;align-items:center;gap:12px"><h3>Pilot vs Other — Avg per ATS</h3>${filterBtn5}</div><div class="fo-card-b" style="max-height:620px;overflow:auto"><table class="bm-tbl"><thead><tr>${th}</tr></thead><tbody>${body}</tbody></table></div></div>`;
+      }
+    })();
+
+  } else {
+    // ═══ NCR TEAM MODE ═══
+    html+=mkTable('Absolute Metrics — NCR Team',metrics,[{names:allATS,label:'NCR Team',col:'#555'}],'t1');
+    html+=mkTable('Per Active Store — NCR Team',psMetrics,[{names:allATS,label:'NCR Team',col:'#555'}],'t3');
+
+    // Team Avg per ATS
+    (function(){
+      const nAll=allATS.length;
+      const compMetrics=[
+        {label:'Stores w App',key:'swa',fn:(d,r)=>bmSum(d.sa,r),fmt:v=>v.toFixed(1),col:'#4e79a7'},
+        {label:'Stores w Loan',key:'swl',fn:(d,r)=>bmSum(d.sl,r),fmt:v=>v.toFixed(1),col:'#0d7c5f'},
+        {label:'Apps Scored',key:'as',fn:(d,r)=>bmSum(d.s,r),fmt:v=>v.toFixed(1),col:'#7b1fa2'},
+        {label:'Apps Approved',key:'aa',fn:(d,r)=>bmSum(d.a,r),fmt:v=>v.toFixed(1),col:'#e37400'},
+        {label:'Disbursement',key:'di',fn:(d,r)=>bmSum(d.d,r),fmt:v=>fmtK(v),col:'#c5221f'},
+        {label:'Scored / Store',key:'ss',fn:(d,r)=>{const sa=bmSum(d.sa,r);return sa?bmSum(d.s,r)/sa:0;},fmt:v=>v.toFixed(2),col:'#7b1fa2'},
+        {label:'Approved / Store',key:'aps2',fn:(d,r)=>{const sa=bmSum(d.sa,r);return sa?bmSum(d.a,r)/sa:0;},fmt:v=>v.toFixed(2),col:'#e37400'},
+        {label:'Disb / Store',key:'ds',fn:(d,r)=>{const sl=bmSum(d.sl,r);return sl?bmSum(d.d,r)/sl:0;},fmt:v=>fmtK(v),col:'#c5221f'}
+      ];
+      const st5=BF.t5;
+      const visibleMetrics=compMetrics.filter(cm=>st5.m[cm.key]);
+      const filterBtn5=mkFilterBtn('t5',compMetrics,[],false);
+      if(visibleMetrics.length===0){
+        html+=`<div class="fo-card" style="margin-bottom:16px"><div class="fo-card-h" style="display:flex;align-items:center;gap:12px"><h3>NCR Team — Avg per ATS</h3>${filterBtn5}</div><div class="fo-card-b" style="padding:20px;color:#999;font-size:12px">No metrics selected.</div></div>`;
+      } else {
+        let th=`<th class="bm-c1" style="min-width:120px"></th>`+show.map(l=>`<th class="fo-n" style="font-size:9px;min-width:60px">${l}</th>`).join('')+`<th class="fo-n" style="font-size:9px;min-width:60px;background:#eef1f6;font-weight:700">Avg</th>`;
+        let body='';
+        visibleMetrics.forEach(cm=>{
+          let row=`<tr style="border-bottom:1px solid #e8e8e8"><td class="bm-c1" style="font-size:11px;font-weight:600;color:${cm.col}">${cm.label}</td>`;
+          let totalSum=0;
+          ri.forEach(r=>{let t=0;allATS.forEach(n=>{const d=BM_W[n];if(d)t+=cm.fn(d,r);});const avg=t/nAll;totalSum+=avg;row+=`<td class="fo-n" style="font-size:11px">${avg===0?'':cm.fmt(avg)}</td>`;});
+          const gAvg=totalSum/ri.length;
+          row+=`<td class="fo-n" style="font-size:11px;font-weight:700;background:#f7f8fb">${cm.fmt(gAvg)}</td></tr>`;
+          body+=row;
+        });
+        html+=`<div class="fo-card" style="margin-bottom:16px"><div class="fo-card-h" style="display:flex;align-items:center;gap:12px"><h3>NCR Team — Avg per ATS</h3>${filterBtn5}</div><div class="fo-card-b" style="overflow:auto"><table class="bm-tbl"><thead><tr>${th}</tr></thead><tbody>${body}</tbody></table></div></div>`;
+      }
+    })();
+  }
+
+  el.innerHTML=html;
+}
+window.bmSetGran=function(g){bmGran=g;rBizMetrics();};
+
+// ═══ SNAPSHOT GENERATOR ═══
+window.genSnapshot=function(weekIdx){
+  // Default to last week
+  if(weekIdx===undefined) weekIdx=BM_NW-1;
+  const lwLabel=BM_WL[weekIdx];
+  const ri=[weekIdx];
+
+  // New stores week mapping: BM weeks 27-34 = R weeks 0-7
+  const nsWeekIdx=weekIdx-27; // BM week 27 = Jan 05 = WL[0]
+
+  const allATS=[...PN,...ON];
+  const rows=allATS.map(n=>{
+    const bm=BM_W[n]||{};
+    const isPilot=PN.includes(n);
+    const nsApp=(nsWeekIdx>=0&&nsWeekIdx<WL.length)?(W_FA[n]||[])[nsWeekIdx]||0:0;
+    const disb=bm.d?bm.d[weekIdx]:0;
+    const activeStores=bm.sa?bm.sa[weekIdx]:0;
+    return {name:n,group:isPilot?'Pilot':'Other',nsApp,disb,activeStores,visits:'N/A'};
+  });
+
+  // Week selector
+  let wSel=`<select id="snapWeekSel" onchange="document.getElementById('snapModal').remove();genSnapshot(+this.value)" style="padding:4px 8px;border:1px solid #ccc;border-radius:4px;font-size:11px">`;
+  BM_WL.forEach((l,i)=>{wSel+=`<option value="${i}"${i===weekIdx?' selected':''}>${l}</option>`;});
+  wSel+=`</select>`;
+
+  // Build table
+  let t=`<div style="font-family:'Source Sans 3',sans-serif;max-width:820px;margin:0 auto">`;
+  t+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px"><span style="font-size:16px;font-weight:700">📊 NCR Pilot Weekly Snapshot</span><span style="font-size:13px;color:#666">Week of ${lwLabel}</span></div>`;
+  t+=`<div style="font-size:11px;color:#aaa;margin-bottom:12px">Pilot (4 ATS) vs Other NCR (10 ATS)</div>`;
+  t+=`<table style="width:100%;border-collapse:collapse;font-size:12px">`;
+  t+=`<thead><tr style="background:#f0f2f5;border-bottom:2px solid #ccc">`;
+  t+=`<th style="text-align:left;padding:8px 10px">ATS</th>`;
+  t+=`<th style="text-align:center;padding:8px 6px">Group</th>`;
+  t+=`<th style="text-align:center;padding:8px 6px">New Stores<br>w App</th>`;
+  t+=`<th style="text-align:right;padding:8px 6px">Disbursement</th>`;
+  t+=`<th style="text-align:center;padding:8px 6px">Active<br>Stores</th>`;
+  t+=`<th style="text-align:center;padding:8px 6px">Visits</th>`;
+  t+=`</tr></thead><tbody>`;
+
+  const pRows=rows.filter(r=>r.group==='Pilot');
+  const oRows=rows.filter(r=>r.group==='Other');
+
+  function addRows(arr,groupColor){
+    arr.forEach((r,i)=>{
+      const bg=i%2===0?'#fff':'#fafbfc';
+      t+=`<tr style="background:${bg};border-bottom:1px solid #eee">`;
+      t+=`<td style="padding:6px 10px;font-weight:600">${r.name}</td>`;
+      t+=`<td style="text-align:center;padding:6px"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${groupColor};margin-right:3px"></span>${r.group}</td>`;
+      t+=`<td style="text-align:center;padding:6px;font-weight:${r.nsApp?700:400};color:${r.nsApp?'#333':'#ccc'}">${r.nsApp||'–'}</td>`;
+      t+=`<td style="text-align:right;padding:6px;font-weight:600">${r.disb?'₱'+Math.round(r.disb).toLocaleString():'–'}</td>`;
+      t+=`<td style="text-align:center;padding:6px">${r.activeStores||'–'}</td>`;
+      t+=`<td style="text-align:center;padding:6px;color:#999">${r.visits}</td>`;
+      t+=`</tr>`;
+    });
+  }
+
+  t+=`<tr><td colspan="6" style="background:#4e79a7;color:#fff;font-weight:700;padding:5px 10px;font-size:11px">Pilot (${pRows.length})</td></tr>`;
+  addRows(pRows,'#4e79a7');
+  const pTotDisb=pRows.reduce((s,r)=>s+r.disb,0);
+  const pTotNs=pRows.reduce((s,r)=>s+r.nsApp,0);
+  const pTotAct=pRows.reduce((s,r)=>s+r.activeStores,0);
+  t+=`<tr style="background:#e8f0fe;font-weight:700;border-bottom:2px solid #4e79a7"><td style="padding:6px 10px">Pilot Total</td><td></td><td style="text-align:center;padding:6px">${pTotNs}</td><td style="text-align:right;padding:6px">₱${Math.round(pTotDisb).toLocaleString()}</td><td style="text-align:center;padding:6px">${pTotAct}</td><td style="text-align:center;padding:6px;color:#999">–</td></tr>`;
+
+  t+=`<tr><td colspan="6" style="background:#f28e2b;color:#fff;font-weight:700;padding:5px 10px;font-size:11px">Other NCR (${oRows.length})</td></tr>`;
+  addRows(oRows,'#f28e2b');
+  const oTotDisb=oRows.reduce((s,r)=>s+r.disb,0);
+  const oTotNs=oRows.reduce((s,r)=>s+r.nsApp,0);
+  const oTotAct=oRows.reduce((s,r)=>s+r.activeStores,0);
+  t+=`<tr style="background:#fef3e0;font-weight:700;border-bottom:2px solid #f28e2b"><td style="padding:6px 10px">Other Total</td><td></td><td style="text-align:center;padding:6px">${oTotNs}</td><td style="text-align:right;padding:6px">₱${Math.round(oTotDisb).toLocaleString()}</td><td style="text-align:center;padding:6px">${oTotAct}</td><td style="text-align:center;padding:6px;color:#999">–</td></tr>`;
+
+  // Avg per ATS
+  t+=`<tr style="background:#f7f8fb;border-top:3px solid #333"><td colspan="6" style="padding:6px 10px;font-weight:700;font-size:11px;color:#666">AVG PER ATS</td></tr>`;
+  t+=`<tr style="background:#f7f8fb"><td style="padding:6px 10px;font-weight:600;color:#4e79a7">Pilot Avg</td><td></td>`;
+  t+=`<td style="text-align:center;padding:6px;font-weight:700">${(pTotNs/pRows.length).toFixed(1)}</td>`;
+  t+=`<td style="text-align:right;padding:6px;font-weight:700">₱${Math.round(pTotDisb/pRows.length).toLocaleString()}</td>`;
+  t+=`<td style="text-align:center;padding:6px;font-weight:700">${(pTotAct/pRows.length).toFixed(1)}</td>`;
+  t+=`<td style="text-align:center;color:#999">–</td></tr>`;
+  t+=`<tr style="background:#f7f8fb"><td style="padding:6px 10px;font-weight:600;color:#f28e2b">Other Avg</td><td></td>`;
+  t+=`<td style="text-align:center;padding:6px;font-weight:700">${(oTotNs/oRows.length).toFixed(1)}</td>`;
+  t+=`<td style="text-align:right;padding:6px;font-weight:700">₱${Math.round(oTotDisb/oRows.length).toLocaleString()}</td>`;
+  t+=`<td style="text-align:center;padding:6px;font-weight:700">${(oTotAct/oRows.length).toFixed(1)}</td>`;
+  t+=`<td style="text-align:center;color:#999">–</td></tr>`;
+
+  // Delta
+  const dNs=oTotNs/oRows.length>0?((pTotNs/pRows.length)/(oTotNs/oRows.length)-1)*100:0;
+  const dDisb=oTotDisb/oRows.length>0?((pTotDisb/pRows.length)/(oTotDisb/oRows.length)-1)*100:0;
+  const dAct=oTotAct/oRows.length>0?((pTotAct/pRows.length)/(oTotAct/oRows.length)-1)*100:0;
+  function dFmt(v){const c=v>=0?'#0d7c5f':'#c5221f';return `<span style="color:${c};font-weight:700">${v>=0?'+':''}${v.toFixed(0)}%</span>`;}
+  t+=`<tr style="background:#f7f8fb;border-bottom:3px solid #333"><td style="padding:6px 10px;font-weight:600;color:#666">Δ Pilot vs Other</td><td></td>`;
+  t+=`<td style="text-align:center;padding:6px">${dFmt(dNs)}</td>`;
+  t+=`<td style="text-align:right;padding:6px">${dFmt(dDisb)}</td>`;
+  t+=`<td style="text-align:center;padding:6px">${dFmt(dAct)}</td>`;
+  t+=`<td style="text-align:center;color:#999">–</td></tr>`;
+
+  t+=`</tbody></table>`;
+  t+=`<div style="font-size:10px;color:#aaa;margin-top:8px">⚠️ Visits data not available. New Stores from NCR new stores file (store_aldi_supervisor).</div>`;
+  t+=`</div>`;
+
+  // Show in modal
+  const modal=document.createElement('div');
+  modal.id='snapModal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center';
+  modal.innerHTML=`<div style="background:#fff;border-radius:10px;padding:24px;max-width:860px;width:95%;max-height:90vh;overflow:auto;box-shadow:0 8px 32px rgba(0,0,0,0.2)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;color:#666">Week:</span>${wSel}</div>
+      <button onclick="this.closest('#snapModal').remove()" style="padding:6px 16px;background:#eee;border:none;border-radius:4px;cursor:pointer;font-weight:600">✕ Close</button>
+    </div>
+    <div class="snap-body">${t}</div>
+  </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
+};
+
+// ════════════════════════════════════════════════════════════════════
+// ═══ FIELD OPS MODULE v2 ═══
+// ════════════════════════════════════════════════════════════════════
+(function(){
+let FO_R=[];
+
+/* helpers */
+const fofc=(r,f)=>{const k=Object.keys(r).find(k=>k.toLowerCase().includes(f.toLowerCase()));return k?r[k]:''};
+const fofk=(r,test)=>{const k=Object.keys(r).find(test);return k?r[k]:''};
+const fonum=v=>{const n=parseInt(v);return isNaN(n)?0:n};
+const fopct=(a,b)=>b?Math.round(a/b*100):0;
+
+/* Column accessors for v2 form */
+const fg={
+  name:r=>fofc(r,'Name')||'',
+  store:r=>fofc(r,'Store name')||'',
+  type:r=>fofc(r,'type of visit')||'',
+  start:r=>fofc(r,'Start time')||'',
+  end:r=>fofc(r,'Completion time')||'',
+  actSales:r=>fofc(r,'Store monthly sales overall')||'',
+  actComp:r=>fofk(r,k=>/^competitors visible in store\?$/i.test(k.trim()))||'',
+  actChecklist:r=>fofc(r,'Activation store readiness checklist')||'',
+  actReady:r=>fofc(r,'Store is fully ready to process the loans:')||'',
+  actWhyNot:r=>{const k=Object.keys(r).find(k=>k.includes('If No: Briefly explain why')&&!k.includes('1'));return k?r[k]:''},
+  actSuccess:r=>fofc(r,'Store was activated by loan during the visit')||'',
+  reactComp:r=>fofk(r,k=>/^competitors visibility\u00a0$/i.test(k))||'',
+  reactReason:r=>fofc(r,'Reason store became inactive')||'',
+  reactChecklist:r=>fofc(r,'Reactivation store readiness checklist')||'',
+  reactNotReady:r=>fofc(r,'not ready, what needs')||'',
+  reactMarketing:r=>fofk(r,k=>/^marketing materials installed/i.test(k.trim()))||'',
+  reactAttention:r=>fofc(r,'What needs attention')||'',
+  reactReady:r=>fofk(r,k=>/^store is fully ready to process the loans$/i.test(k.trim()))||'',
+  reactSuccess:r=>{const v=fofc(r,'reactivated by loan');return typeof v==='string'?v.trim():String(v||'')},
+  portComp:r=>fofk(r,k=>/^competitors visibility\u00a01$/i.test(k))||'',
+  portChecklist:r=>fofc(r,'Portfolio store checklist readiness')||'',
+  portMarketing:r=>fofk(r,k=>/^marketing materials in good condition/i.test(k.trim()))||'',
+  soCategory:r=>fofc(r,'Store category')||'',
+  soSales:r=>fofk(r,k=>/^monthly sales$/i.test(k.trim()))||'',
+  soComp:r=>fofk(r,k=>/^competitors visible in store\?\n$/i.test(k)||/^competitors visible in store\?\s*$/i.test(k)&&k!==Object.keys(r).find(k2=>/^competitors visible in store\?$/i.test(k2.trim())))||'',
+  soContract:r=>fofc(r,'Contract signed')||'',
+  soWhyNo:r=>fofc(r,'explain why1')||'',
+  soDocs:r=>fofc(r,'All documents collected')||'',
+  soPhone:r=>fofc(r,"owner phone")||'',
+  whoPresent:r=>fofc(r,'Who is present')||'',
+  offered:r=>fofc(r,'offered Salmon loan')||'',
+  attempted:r=>fofc(r,'applications were attempted')||'',
+  possibleRAs:r=>fofc(r,'possible RAs')||'',
+  connectedRAs:r=>fofc(r,'already been connected')||'',
+  newRAs:r=>fofc(r,'new RAs have you connected')||'',
+  totalCust:r=>fofc(r,'Total customers you saw')||'',
+};
+
+function foDateKey(r){
+  const d=fg.start(r);if(!d)return'';
+  if(d instanceof Date)return d.toISOString().slice(0,10);
+  const s=String(d);
+  const iso=s.match(/(\d{4}-\d{2}-\d{2})/);if(iso)return iso[1];
+  const mdy=s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(mdy)return `${mdy[3]}-${mdy[1].padStart(2,'0')}-${mdy[2].padStart(2,'0')}`;
+  return s.slice(0,10);
+}
+const foDayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function foDateLabel(d){
+  const[y,mm,dd]=d.split('-');
+  const dt=new Date(d+'T12:00:00Z');
+  const day=foDayNames[dt.getUTCDay()];
+  return `<div style="font-size:8px;color:#999;line-height:1">${day}</div>${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(mm)-1]} ${parseInt(dd)}`;
+}
+
+/* ── File handling ── */
+const foUB=document.getElementById('foUpB'),foFI=document.getElementById('foFIn'),foRI=document.getElementById('foRIn');
+foUB.onclick=e=>{if(e.target===foFI)return;foFI.click()};
+foFI.onclick=e=>e.stopPropagation();
+foUB.ondragover=e=>{e.preventDefault();foUB.classList.add('dov')};
+foUB.ondragleave=()=>foUB.classList.remove('dov');
+foUB.ondrop=e=>{e.preventDefault();foUB.classList.remove('dov');if(e.dataTransfer.files.length)foLd(e.dataTransfer.files[0])};
+foFI.onchange=e=>{if(e.target.files.length)foLd(e.target.files[0])};
+foRI.onchange=e=>{if(e.target.files.length)foLd(e.target.files[0])};
+
+function foLd(f){
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const wb=XLSX.read(ev.target.result,{type:'array',cellDates:true});
+      FO_R=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+      document.getElementById('foFN').textContent=f.name+' · '+FO_R.length+' rows';
+      document.getElementById('foUpZ').classList.add('hid');
+      document.getElementById('foDB').classList.add('vis');
+      foGo();
+    }catch(e){alert('File error: '+e.message);}
+  };reader.readAsArrayBuffer(f);
+}
+
+/* ═══ MAIN ═══ */
+function foGo(){
+  try{
+  const rows=FO_R;if(!rows.length)return;
+  const dates=[...new Set(rows.map(foDateKey))].filter(d=>d).sort();
+  const ats=[...new Set(rows.map(r=>fg.name(r)))].filter(n=>n).sort();
+  const act=rows.filter(r=>fg.type(r)==='Activation');
+  const react=rows.filter(r=>fg.type(r)==='Reactivation');
+  const port=rows.filter(r=>fg.type(r)==='Portfolio');
+  const so=rows.filter(r=>fg.type(r)==='Store Opening');
+  foS1_Daily(rows,ats,dates);
+  foS2_Activation(act);
+  foS3_Reactivation(react);
+  foS4_StoreOpening(so);
+  foS7_Segmentation(rows,act,react,port,so);
+  /* Auto-measure ATS column widths and set Metric column left offset */
+  requestAnimationFrame(()=>{
+    document.querySelectorAll('.fo-col1').forEach(el=>{
+      const tbl=el.closest('table');
+      if(!tbl||tbl.dataset.fixed) return;
+      tbl.dataset.fixed='1';
+      const w=el.offsetWidth;
+      tbl.querySelectorAll('.fo-col2').forEach(c2=>{c2.style.left=w+'px'});
+    });
+  });
+  }catch(e){console.error('foGo():',e);alert('Field Ops error: '+e.message);}
+}
+
+/* ═══ Shared: BM-style table builder ═══ */
+function foBMTable(targetId,subsetRows,cfg){
+  const {metrics,mCol,mKey,getData,highlightMetric,highlightColor}=cfg;
+  if(!subsetRows.length){document.getElementById(targetId).innerHTML='<p style="color:#999;font-size:12px">No visits.</p>';return null}
+  const atsIn=[...new Set(subsetRows.map(r=>fg.name(r)))].filter(n=>n).sort();
+  const datesIn=[...new Set(subsetRows.map(foDateKey))].filter(d=>d).sort();
+  const m={};
+  subsetRows.forEach(r=>{const n=fg.name(r),d=foDateKey(r);if(!n||!d)return;const key=n+'|'+d;if(!m[key])m[key]={};getData(r,m[key])});
+
+  const tblId='fot_'+targetId;
+  let h=`<div class="tbl-wrap" style="max-height:70vh;overflow:auto"><table id="${tblId}" style="border-collapse:separate;border-spacing:0">`;
+  h+=`<thead><tr style="position:sticky;top:0;z-index:10"><th class="fo-col1" style="text-align:left;z-index:12;background:#f0f0f0;border-right:1px solid #e0e0e0">ATS</th>`;
+  h+=`<th class="fo-col2" style="z-index:12;background:#f0f0f0;border-right:1px solid #e0e0e0;text-align:left">Metric</th>`;
+  datesIn.forEach(d=>{h+=`<th class="hm" style="background:#f0f0f0;min-width:56px">${foDateLabel(d)}</th>`});
+  h+=`</tr></thead><tbody>`;
+
+  /* Grand Total row at top */
+  h+=`<tr style="background:#f7f7f7;border-bottom:2px solid #ccc"><td class="fo-col1" style="font-size:11px;font-weight:700;z-index:2;padding:4px 8px;background:#f7f7f7;border-right:none">Grand Total</td>`;
+  h+=`<td class="fo-col2" style="z-index:2;background:#f7f7f7;border-right:1px solid #e0e0e0;font-size:11px;font-weight:700;color:#333">Visits</td>`;
+  datesIn.forEach(d=>{let dv=0;atsIn.forEach(n=>{const data=m[n+'|'+d];if(data)dv+=(data[mKey[metrics[0]]]||0)});h+=`<td class="hm" style="font-weight:700;background:#f7f7f7">${dv||''}</td>`});
+  h+=`</tr>`;
+
+  atsIn.forEach((n,ai)=>{
+    const bg=ai%2===0?'#fff':'#fafafa';
+    metrics.forEach((mt,mi)=>{
+      h+=`<tr style="background:${bg}">`;
+      if(mi===0) h+=`<td rowspan="${metrics.length}" class="fo-col1" style="font-size:11px;font-weight:600;white-space:nowrap;z-index:2;padding:4px 8px;background:${bg};border-right:none;vertical-align:top;padding-top:10px;border-bottom:1px solid #ddd">${n}</td>`;
+      h+=`<td class="fo-col2" style="z-index:2;background:${bg};border-right:1px solid #e0e0e0;font-size:11px;color:${mCol[mt]};font-weight:500;white-space:nowrap;padding:4px 8px;box-shadow:2px 0 4px rgba(0,0,0,0.04);${mi===metrics.length-1?'border-bottom:1px solid #ddd;':''}">${mt}</td>`;
+      datesIn.forEach(d=>{const data=m[n+'|'+d];const v=data?(data[mKey[mt]]||0):0;const isHL=mt===highlightMetric&&v>0;
+        h+=`<td class="hm" style="font-size:11px;${isHL?'color:'+highlightColor+';font-weight:700;':''}${mi===metrics.length-1?'border-bottom:1px solid #ddd;':''}">${v||'<span style=\"color:#ddd\">·</span>'}</td>`});
+      h+=`</tr>`;
+    });
+  });
+  h+=`</tbody></table></div>`;
+  return h;
+}
+
+/* ═══ S1: Daily Tracker ═══ */
+function foS1_Daily(rows,ats,dates){
+  const types=['Activation','Reactivation','Portfolio','Store Opening'];
+  const tCol={Activation:'#e65100',Reactivation:'#7b1fa2',Portfolio:'#4e79a7','Store Opening':'#0d7c5f'};
+  const m={};
+  rows.forEach(r=>{const n=fg.name(r),d=foDateKey(r),t=fg.type(r);if(!n||!d||!t)return;m[n+'|'+d+'|'+t]=(m[n+'|'+d+'|'+t]||0)+1});
+
+  let h=`<div class="tbl-wrap" style="max-height:70vh;overflow:auto"><table style="border-collapse:separate;border-spacing:0">`;
+  h+=`<thead><tr style="position:sticky;top:0;z-index:10"><th class="fo-col1" style="text-align:left;z-index:12;background:#f0f0f0;border-right:1px solid #e0e0e0">ATS</th>`;
+  h+=`<th class="fo-col2" style="z-index:12;background:#f0f0f0;border-right:1px solid #e0e0e0;text-align:left">Metric</th>`;
+  dates.forEach(d=>{h+=`<th class="hm" style="background:#f0f0f0;min-width:56px">${foDateLabel(d)}</th>`});
+  h+=`</tr></thead><tbody>`;
+
+  /* Grand Total row at top */
+  h+=`<tr style="background:#f7f7f7;border-bottom:2px solid #ccc"><td class="fo-col1" style="font-size:11px;font-weight:700;z-index:2;background:#f7f7f7;border-right:none">Grand Total</td>`;
+  h+=`<td class="fo-col2" style="z-index:2;background:#f7f7f7;border-right:1px solid #e0e0e0;font-size:11px;font-weight:700;color:#333">All Visits</td>`;
+  dates.forEach(d=>{const dayT=rows.filter(r=>fg.name(r)&&foDateKey(r)===d).length;h+=`<td class="hm" style="font-weight:700;background:#f7f7f7">${dayT||''}</td>`});
+  h+=`</tr>`;
+
+  ats.forEach((n,ai)=>{
+    const bg=ai%2===0?'#fff':'#fafafa';
+    types.forEach((t,ti)=>{
+      h+=`<tr style="background:${bg}">`;
+      if(ti===0) h+=`<td rowspan="${types.length}" class="fo-col1" style="font-size:11px;font-weight:600;z-index:2;background:${bg};border-right:none;vertical-align:top;padding-top:10px;border-bottom:1px solid #ddd">${n}</td>`;
+      h+=`<td class="fo-col2" style="z-index:2;background:${bg};border-right:1px solid #e0e0e0;font-size:11px;color:${tCol[t]};font-weight:500;white-space:nowrap;padding:4px 6px;box-shadow:2px 0 4px rgba(0,0,0,0.04);${ti===types.length-1?'border-bottom:1px solid #ddd;':''}">${t}</td>`;
+      dates.forEach(d=>{const v=m[n+'|'+d+'|'+t]||0;h+=`<td class="hm" style="font-size:11px;${ti===types.length-1?'border-bottom:1px solid #ddd;':''}">${v||'<span style=\"color:#ddd\">·</span>'}</td>`});
+      h+=`</tr>`;
+    });
+  });
+  h+=`</tbody></table></div>`;
+  document.getElementById('fo-s1').innerHTML=h;
+}
+
+/* ═══ S2: Activation Tracker ═══ */
+function foS2_Activation(act){
+  const h=foBMTable('fo-s2',act,{
+    metrics:['Visits','Offered','Attempted','Activated'],
+    mCol:{Visits:'#4a4a4a',Offered:'#4e79a7',Attempted:'#e65100',Activated:'#0d7c5f'},
+    mKey:{Visits:'Visits',Offered:'Offered',Attempted:'Attempted',Activated:'Activated'},
+    getData:(r,d)=>{d.Visits=(d.Visits||0)+1;d.Offered=(d.Offered||0)+fonum(fg.offered(r));d.Attempted=(d.Attempted||0)+fonum(fg.attempted(r));d.Activated=(d.Activated||0)+(fg.actSuccess(r)==='Yes'?1:0)},
+    highlightMetric:'Activated',highlightColor:'#0d7c5f'
+  });
+  if(h)document.getElementById('fo-s2').innerHTML=h;
+}
+
+/* ═══ S3: Reactivation Tracker ═══ */
+function foS3_Reactivation(react){
+  const h=foBMTable('fo-s3',react,{
+    metrics:['Visits','Offered','Attempted','Reactivated'],
+    mCol:{Visits:'#4a4a4a',Offered:'#4e79a7',Attempted:'#e65100',Reactivated:'#7b1fa2'},
+    mKey:{Visits:'Visits',Offered:'Offered',Attempted:'Attempted',Reactivated:'Reactivated'},
+    getData:(r,d)=>{d.Visits=(d.Visits||0)+1;d.Offered=(d.Offered||0)+fonum(fg.offered(r));d.Attempted=(d.Attempted||0)+fonum(fg.attempted(r));d.Reactivated=(d.Reactivated||0)+(fg.reactSuccess(r)==='Yes'?1:0)},
+    highlightMetric:'Reactivated',highlightColor:'#7b1fa2'
+  });
+  if(h)document.getElementById('fo-s3').innerHTML=h;
+}
+
+/* ═══ S4: Store Opening Tracker + Rejection Explorer ═══ */
+function foS4_StoreOpening(so){
+  if(!so.length){document.getElementById('fo-s4').innerHTML='<p style="color:#999;font-size:12px">No Store Opening visits.</p>';return}
+  const hasPhone=v=>{if(!v)return false;return String(v).replace(/\D/g,'').length>=7};
+  const atsS=[...new Set(so.map(r=>fg.name(r)))].filter(n=>n).sort();
+  const sDates=[...new Set(so.map(foDateKey))].filter(d=>d).sort();
+  const m={};
+  so.forEach(r=>{const n=fg.name(r),d=foDateKey(r);if(!n||!d)return;const key=n+'|'+d;if(!m[key])m[key]={Visits:0,Phone:0,Contract:0};m[key].Visits++;if(hasPhone(fg.soPhone(r)))m[key].Phone++;if(fg.soContract(r)==='Yes')m[key].Contract++});
+
+  const metrics=['Visits','Phone Collected','Contract Signed'];
+  const mCol={'Visits':'#4a4a4a','Phone Collected':'#4e79a7','Contract Signed':'#0d7c5f'};
+  const mKey2={'Visits':'Visits','Phone Collected':'Phone','Contract Signed':'Contract'};
+
+  let h=`<div class="tbl-wrap" style="max-height:70vh;overflow:auto"><table style="border-collapse:separate;border-spacing:0">`;
+  h+=`<thead><tr style="position:sticky;top:0;z-index:10"><th class="fo-col1" style="text-align:left;z-index:12;background:#f0f0f0;border-right:1px solid #e0e0e0">ATS</th>`;
+  h+=`<th class="fo-col2" style="z-index:12;background:#f0f0f0;border-right:1px solid #e0e0e0;text-align:left">Metric</th>`;
+  sDates.forEach(d=>{h+=`<th class="hm" style="background:#f0f0f0;min-width:56px">${foDateLabel(d)}</th>`});
+  h+=`</tr></thead><tbody>`;
+  /* Grand Total */
+  h+=`<tr style="background:#f7f7f7"><td class="fo-col1" style="font-size:11px;font-weight:700;z-index:2;background:#f7f7f7;border-right:none">Grand Total</td>`;
+  h+=`<td class="fo-col2" style="z-index:2;background:#f7f7f7;border-right:1px solid #e0e0e0;font-size:11px;font-weight:700">Visits</td>`;
+  sDates.forEach(d=>{let dv=0;atsS.forEach(n=>{const data=m[n+'|'+d];if(data)dv+=data.Visits});h+=`<td class="hm" style="font-weight:700;background:#f7f7f7">${dv||''}</td>`});
+  h+=`</tr>`;
+  atsS.forEach((n,ai)=>{
+    const bg=ai%2===0?'#fff':'#fafafa';
+    metrics.forEach((mt,mi)=>{
+      h+=`<tr style="background:${bg}">`;
+      if(mi===0) h+=`<td rowspan="${metrics.length}" class="fo-col1" style="font-size:11px;font-weight:600;z-index:2;background:${bg};border-right:none;vertical-align:top;padding-top:10px;border-bottom:1px solid #ddd">${n}</td>`;
+      h+=`<td class="fo-col2" style="z-index:2;background:${bg};border-right:1px solid #e0e0e0;font-size:11px;color:${mCol[mt]};font-weight:500;white-space:nowrap;padding:4px 6px;box-shadow:2px 0 4px rgba(0,0,0,0.04);${mi===metrics.length-1?'border-bottom:1px solid #ddd;':''}">${mt}</td>`;
+      sDates.forEach(d=>{const data=m[n+'|'+d];const v=data?(data[mKey2[mt]]||0):0;const isHL=mt==='Contract Signed'&&v>0;h+=`<td class="hm" style="font-size:11px;${isHL?'color:#0d7c5f;font-weight:700;':''}${mi===metrics.length-1?'border-bottom:1px solid #ddd;':''}">${v||'<span style=\"color:#ddd\">·</span>'}</td>`});
+      h+=`</tr>`;
+    });
+  });
+  h+=`</tbody></table></div>`;
+
+  /* ── Rejection Reasons: pie + filterable explorer ── */
+  const rejected=so.filter(r=>fg.soContract(r)!=='Yes');
+  if(rejected.length){
+    /* Pie chart of reasons */
+    const pieColors=['#e15759','#f28e2b','#4e79a7','#76b7b2','#59a14f','#edc948','#b07aa1','#9c755f'];
+    const reasons={};rejected.forEach(r=>{const w=fg.soWhyNo(r);if(w)reasons[w]=(reasons[w]||0)+1});
+    if(Object.keys(reasons).length){
+      h+=`<div style="margin-top:16px">`+foPieCard('Rejection Reasons',reasons,pieColors,`${rejected.length} rejected of ${so.length} total`)+`</div>`;
+    }
+
+    /* Explorer with filters */
+    h+=`<div style="display:block;position:relative;margin-top:20px;background:#fff;border:1px solid #e8e8e8;border-radius:8px;padding:16px">`;
+    h+=`<div style="font-size:10px;color:#999;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Visit Details Explorer</div>`;
+    h+=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">`;
+    h+=`<select id="so-f-date" style="padding:6px 10px;font-size:11px;border:1px solid #d0d0d0;border-radius:5px;background:#fff;font-family:inherit;cursor:pointer"><option value="all">All Dates</option>${sDates.map(d=>`<option value="${d}">${foDateLabel(d).replace(/<[^>]*>/g,' ').trim()}</option>`).join('')}</select>`;
+    h+=`<select id="so-f-ats" style="padding:6px 10px;font-size:11px;border:1px solid #d0d0d0;border-radius:5px;background:#fff;font-family:inherit;cursor:pointer"><option value="all">All ATS</option>${atsS.map(n=>`<option value="${n}">${n}</option>`).join('')}</select>`;
+    h+=`</div>`;
+    h+=`<div id="so-explorer"></div></div>`;
+    document.getElementById('fo-s4').innerHTML=h;
+
+    /* Store full SO rows for explorer */
+    window._foSO=so;
+    const renderExplorer=()=>{
+      const fd=document.getElementById('so-f-date').value;
+      const fa=document.getElementById('so-f-ats').value;
+      const ready=fd!=='all'&&fa!=='all';
+      if(!ready){
+        document.getElementById('so-explorer').innerHTML=`<div style="display:flex;align-items:center;justify-content:center;padding:32px 16px;background:#f9fafb;border:1px dashed #d8dde3;border-radius:6px;color:#8c939e;font-size:12px;text-align:center">Select an ATS and a date to view visit details</div>`;
+        return;
+      }
+      let filtered=so.filter(r=>foDateKey(r)===fd&&fg.name(r)===fa);
+      let t=`<div style="overflow:auto;max-height:calc(100vh - 260px)"><table style="font-size:11px;border-collapse:collapse;width:100%"><thead><tr style="position:sticky;top:0;background:#f7f8fb;z-index:2"><th style="text-align:left;padding:6px 8px">ATS</th><th style="text-align:left;padding:6px 8px">Store</th><th style="padding:6px 8px">Date</th><th style="padding:6px 8px">Category</th><th style="padding:6px 8px">Sales</th><th style="padding:6px 8px">Contract</th><th style="text-align:left;padding:6px 8px">Reason</th><th style="padding:6px 8px">Phone</th><th style="padding:6px 8px">Docs</th><th style="padding:6px 8px">Competitors</th><th style="padding:6px 8px">Present</th><th style="padding:6px 8px">RAs new</th><th style="padding:6px 8px">Offered</th><th style="padding:6px 8px">Attempted</th></tr></thead><tbody>`;
+      filtered.forEach(r=>{
+        const c=fg.soContract(r);
+        t+=`<tr>`;
+        t+=`<td style="font-weight:500;padding:4px 8px">${fg.name(r)}</td>`;
+        t+=`<td style="padding:4px 8px">${fg.store(r)}</td>`;
+        t+=`<td class="hm" style="padding:4px 8px">${foDateKey(r)}</td>`;
+        t+=`<td class="hm" style="padding:4px 8px">${fg.soCategory(r)}</td>`;
+        t+=`<td class="hm" style="padding:4px 8px">${fg.soSales(r)||'—'}</td>`;
+        t+=`<td class="hm" style="padding:4px 8px"><span class="${c==='Yes'?'fo-ok':'fo-miss'}">${c||'—'}</span></td>`;
+        t+=`<td style="color:#999;padding:4px 8px">${fg.soWhyNo(r)||'—'}</td>`;
+        t+=`<td class="hm" style="padding:4px 8px">${fg.soPhone(r)||'—'}</td>`;
+        t+=`<td class="hm" style="padding:4px 8px">${fg.soDocs(r)||'—'}</td>`;
+        t+=`<td class="hm" style="padding:4px 8px">${fg.soComp(r)||'—'}</td>`;
+        t+=`<td class="hm" style="padding:4px 8px">${fg.whoPresent(r)||'—'}</td>`;
+        t+=`<td class="hm" style="padding:4px 8px">${fg.newRAs(r)||'0'}</td>`;
+        t+=`<td class="hm" style="padding:4px 8px">${fg.offered(r)||'0'}</td>`;
+        t+=`<td class="hm" style="padding:4px 8px">${fg.attempted(r)||'0'}</td>`;
+        t+=`</tr>`;
+      });
+      t+=`</tbody></table></div>`;
+      t+=`<div style="font-size:10px;color:#bbb;margin-top:6px">${filtered.length} visit${filtered.length!==1?'s':''} shown</div>`;
+      document.getElementById('so-explorer').innerHTML=t;
+    };
+    document.getElementById('so-f-date').onchange=renderExplorer;
+    document.getElementById('so-f-ats').onchange=renderExplorer;
+    renderExplorer();
+  } else {
+    document.getElementById('fo-s4').innerHTML=h;
+  }
+}
+
+/* ═══ SVG Pie Card (shared) ═══ */
+function foPieCard(title,data,colors,subtitle){
+  const entries=Object.entries(data).sort((a,b)=>b[1]-a[1]);
+  const total=entries.reduce((s,e)=>s+e[1],0);if(!total)return'';
+  const size=200,cx=100,cy=100,r=90;let angle=-Math.PI/2,paths='',labels='';
+  entries.forEach(([k,v],i)=>{
+    const sweep=(v/total)*2*Math.PI,x1=cx+r*Math.cos(angle),y1=cy+r*Math.sin(angle),x2=cx+r*Math.cos(angle+sweep),y2=cy+r*Math.sin(angle+sweep),large=sweep>Math.PI?1:0,col=colors[i%colors.length];
+    paths+=`<path d="M${cx},${cy} L${x1.toFixed(2)},${y1.toFixed(2)} A${r},${r} 0 ${large},1 ${x2.toFixed(2)},${y2.toFixed(2)} Z" fill="${col}" stroke="#fff" stroke-width="1.5"/>`;
+    const p=Math.round(v/total*100);
+    if(p>=4){const mid=angle+sweep/2,lx=cx+r*0.62*Math.cos(mid),ly=cy+r*0.62*Math.sin(mid);labels+=`<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="12" font-weight="700" font-family="Source Sans 3,sans-serif">${p}%</text>`}
+    angle+=sweep;
+  });
+  const svg=`<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="flex-shrink:0">${paths}${labels}</svg>`;
+  let leg='';entries.forEach(([k,v],i)=>{const p=Math.round(v/total*100);leg+=`<div style="display:flex;align-items:center;gap:8px;margin:3px 0;font-size:12px;line-height:1.5"><div style="width:12px;height:12px;border-radius:2px;background:${colors[i%colors.length]};flex-shrink:0"></div><span style="font-weight:700;min-width:30px">${p}%</span><span style="color:#333">${k}</span><span style="color:#999">(${v})</span></div>`});
+  const subH=subtitle?`<span style="font-size:11px;color:#999;margin-left:auto">${subtitle}</span>`:'';
+  return `<div class="fo-card" style="margin-bottom:10px"><div class="fo-card-h"><h3>${title}</h3>${subH}</div><div class="fo-card-p" style="display:flex;align-items:center;gap:30px;flex-wrap:wrap;padding:20px">${svg}<div>${leg}</div></div></div>`;
+}
+
+/* ═══ S7: Competitors & Segmentation ═══ */
+function foS7_Segmentation(rows,act,react,port,so){
+  const pieColors=['#4e79a7','#f28e2b','#59a14f','#e15759','#76b7b2','#edc948','#b07aa1','#ff9da7','#9c755f','#bab0ac','#6a9e3f','#d4a0a0'];
+  let h=`<div style="margin-bottom:12px"><select id="s7filter" style="padding:4px 24px 4px 8px;font-size:11px;border:1px solid #e0e0e0;border-radius:3px;background:#fff;color:#333;cursor:pointer;font-family:inherit">`;
+  h+=`<option value="all">All Visit Types</option><option value="Activation">Activation</option><option value="Reactivation">Reactivation</option><option value="Portfolio">Portfolio</option><option value="Store Opening">Store Opening</option>`;
+  h+=`</select></div><div id="fo-s7-pies"></div>`;
+  document.getElementById('fo-s7').innerHTML=h;
+  window._foS7={rows,act,react,port,so,pieColors};
+  document.getElementById('s7filter').onchange=()=>foS7draw();
+  foS7draw();
+}
+function foS7draw(){
+  const {act,react,port,so,pieColors}=window._foS7;
+  const sel=document.getElementById('s7filter').value;
+  let compSets=[],salesSets=[],catSets=[];
+  if(sel==='all'||sel==='Activation'){compSets.push({list:act,fn:fg.actComp});salesSets.push({list:act,fn:fg.actSales})}
+  if(sel==='all'||sel==='Reactivation')compSets.push({list:react,fn:fg.reactComp});
+  if(sel==='all'||sel==='Portfolio')compSets.push({list:port,fn:fg.portComp});
+  if(sel==='all'||sel==='Store Opening'){compSets.push({list:so,fn:fg.soComp});salesSets.push({list:so,fn:fg.soSales});catSets.push({list:so,fn:fg.soCategory})}
+  const comps={};let compV=0;
+  compSets.forEach(({list,fn})=>{list.forEach(r=>{compV++;const v=fn(r);if(v)(v).split(';').forEach(c=>{c=c.trim();if(c&&!/^none$/i.test(c))comps[c]=(comps[c]||0)+1})})});
+  const sales={};salesSets.forEach(({list,fn})=>{list.forEach(r=>{const v=fn(r);if(v)sales[v]=(sales[v]||0)+1})});
+  const cats={};catSets.forEach(({list,fn})=>{list.forEach(r=>{const c=fn(r).trim();if(c)cats[c]=(cats[c]||0)+1})});
+  let h='';
+  const noData='<div class="fo-card"><div class="fo-card-p" style="padding:20px;color:#999;font-size:12px">No data for selected type.</div></div>';
+  h+=Object.keys(comps).length?foPieCard('Competitor Presence',comps,pieColors,`from ${compV} visits`):noData;
+  const totalSales=Object.values(sales).reduce((a,b)=>a+b,0);
+  if(totalSales){const sO=['0-100,000','100,000-200,000','200,000-300,000','300,000-500,000','500,000-1,000,000','1,000,000+'];const oS={};sO.forEach(s=>{if(sales[s])oS[s]=sales[s]});Object.keys(sales).forEach(s=>{if(!sO.includes(s))oS[s]=sales[s]});h+=foPieCard('Monthly Sales Volume',oS,pieColors,`from ${totalSales} visits`)}
+  if(Object.keys(cats).length)h+=foPieCard('Business Category',cats,pieColors,`from ${Object.values(cats).reduce((a,b)=>a+b,0)} stores`);
+  document.getElementById('fo-s7-pies').innerHTML=h;
+}
+
+})();
+
+go('bizmetrics');
+
+
+</script>
+</body>
+</html>
