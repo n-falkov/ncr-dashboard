@@ -815,23 +815,40 @@ function rChurn(){
   const fullLabels=CH_ML;
   const si=0;
   const labels=fullLabels;
-  const pAvgLoan=labels.map((_,i)=>{const v=PN.map(n=>(CH_LOAN[n]||[])[i]||0);return +(v.reduce((a,b)=>a+b,0)/v.length).toFixed(1);});
-  const oAvgLoan=labels.map((_,i)=>{const v=ON.map(n=>(CH_LOAN[n]||[])[i]||0);return +(v.reduce((a,b)=>a+b,0)/v.length).toFixed(1);});
+
+  /* Split toggle state */
+  if(!window._churnSplit) window._churnSplit='all';
+  const split=window._churnSplit;
+
+  /* Use latest month's team for default, but chart uses per-month teams */
+  const _PN=PN, _ON=ON;
+
+  /* Compute avg churn for chart */
+  const pAvgLoan=labels.map((_,i)=>{const team=getTeam(labels[i].split('-')[0])||{pilot:_PN};const g=team.pilot||_PN;const v=g.map(n=>(CH_LOAN[n]||[])[i]||0);return v.length?+(v.reduce((a,b)=>a+b,0)/v.length).toFixed(1):0;});
+  const oAvgLoan=labels.map((_,i)=>{const team=getTeam(labels[i].split('-')[0])||{other:_ON};const g=team.other||_ON;const v=g.map(n=>(CH_LOAN[n]||[])[i]||0);return v.length?+(v.reduce((a,b)=>a+b,0)/v.length).toFixed(1):0;});
 
   let h='';
+
+  /* Toggle buttons */
+  h+=`<div style="display:flex;justify-content:flex-end;margin-bottom:12px"><div class="gran">`;
+  h+=`<button class="${split==='pilot'?'on':''}" onclick="window._churnSplit='pilot';rChurn()">Pilot</button>`;
+  h+=`<button class="${split==='other'?'on':''}" onclick="window._churnSplit='other';rChurn()">Other NCR</button>`;
+  h+=`<button class="${split==='all'?'on':''}" onclick="window._churnSplit='all';rChurn()">All</button>`;
+  h+=`</div></div>`;
 
   h+=`<div class="row r1">`;
   h+=sh("Avg Churn Rate by COMBO Disbursement","Pilot vs Other NCR — monthly %",cv("ch1"));
   h+=`</div>`;
 
-  const allN=[...PN,...ON];
+  const allN=[..._PN,..._ON];
   function churnTable(data, title){
     const tLabels=fullLabels;
-    let t='<table><thead><tr><th style="text-align:left;position:sticky;left:0;background:#fff;z-index:2;padding:6px 8px;white-space:normal;word-break:break-word;line-height:1.2">ATS Name</th>';
+    let t='<table><thead><tr><th style="text-align:left;position:sticky;left:0;background:#fff;z-index:3;padding:6px 8px;white-space:nowrap">ATS Name</th>';
     tLabels.forEach(m=>t+=`<th style="text-align:center;min-width:60px;font-size:9px">${m}</th>`);
     t+='<th style="text-align:center;background:#eef1f6;min-width:50px;font-size:9px">Avg</th></tr></thead><tbody>';
 
     function renderChurnGroup(label, group, gc){
+      if(!group.length) return;
       t+=`<tr><td colspan="${1+tLabels.length+1}" style="background:${gc};color:#fff;font-weight:700;font-size:10px;letter-spacing:0.5px;padding:4px 10px">${label}</td></tr>`;
       group.forEach(n=>{
         const vals=data[n]||new Array(tLabels.length).fill(0);
@@ -853,8 +870,8 @@ function rChurn(){
       t+=`<td style="text-align:center;background:#f7f8fb;font-weight:700;font-size:11px">${gAvg}%</td></tr>`;
     }
 
-    renderChurnGroup('Pilot', PN, PC);
-    renderChurnGroup('Other NCR', ON, OC);
+    if(split==='pilot'||split==='all') renderChurnGroup('Pilot', _PN, PC);
+    if(split==='other'||split==='all') renderChurnGroup('Other NCR', _ON, OC);
 
     t+='</tbody></table>';
     return `<div class="row r1">`+sh(title,"Pilot / Other NCR — monthly churn rate %",`<div style="overflow-x:auto">${t}</div>`)+`</div>`;
@@ -911,8 +928,8 @@ function rChurn(){
       });
     }
 
-    renderGroup('Pilot', PN, PC);
-    renderGroup('Other NCR', ON, OC);
+    if(split==='pilot'||split==='all') renderGroup('Pilot', _PN, PC);
+    if(split==='other'||split==='all') renderGroup('Other NCR', _ON, OC);
 
     at+='</tbody></table>';
     h+=`<div class="row r1">`+sh("Stores w Apps — Monthly Dynamics","Active / New / Reactivated / Churn by Applications Scored",`<div style="overflow-x:auto">${at}</div>`)+`</div>`;

@@ -237,13 +237,23 @@ def parse_gr(gr_path, terr_feb, terr_mar):
         bm_w[ats]['d'] = [round(v) for v in bm_w[ats]['d']]
 
     print(f"  ✓ {len(dates)} days → {NW} weeks, {len(month_map)} months | Stores: {matched} matched, {unmatched} non-NCR")
+    # Compute max day of data per month from GR columns
+    gr_max_day = {}  # {month_label: max_day_number}
+    for ci, d in dates:
+        mk = f"{d.year}-{d.month:02d}"
+        for mkey, mi_list in month_map.items():
+            wi = col_to_week.get(ci)
+            if wi is not None and wi in mi_list:
+                gr_max_day[mkey] = max(gr_max_day.get(mkey, 0), d.day)
+                break
+
     for ats in ALL_ATS:
         td = sum(bm_w[ats]['d']); ts = sum(bm_w[ats]['s'])
         print(f"    {ats}: scored={ts:.0f}, disb=₱{td:,.0f}{' ⚠' if td==0 else ''}")
 
     return {'BM_W': bm_w, 'BM_WL': week_labels, 'BM_NW': NW,
             'BM_ML': list(month_map.keys()), 'BM_MR': list(month_map.values()),
-            'TEAM_BY_MONTH': team_by_month}
+            'TEAM_BY_MONTH': team_by_month, 'GR_MAX_DAY': gr_max_day}
 
 
 # ─── PARSE ACTIVATION STORES (New Stores tab) ───────────────────────
@@ -653,23 +663,22 @@ def generate_html(bm_data, ns_data, churn_data=None):
         replacements['/*__CH_APPS_REACT__*/'] = '{}'
         replacements['/*__CH_APPS_CHURN__*/'] = '{}'
 
-    # Generate MONTH_DAYS dynamically based on current date
-    today = datetime.now()
-    bm_months = bm_data['BM_ML']  # e.g. ['Sep','Oct','Nov','Dec','Jan','Feb']
+    # Generate MONTH_DAYS based on actual GR data dates (not current date)
+    bm_months = bm_data['BM_ML']
+    gr_max_day = bm_data.get('GR_MAX_DAY', {})
     month_days = {}
-    month_map = {'Jan':1,'Feb':2,'Mar':3,'Apr':4,'May':5,'Jun':6,'Jul':7,'Aug':8,'Sep':9,'Oct':10,'Nov':11,'Dec':12}
+    month_map_num = {'Jan':1,'Feb':2,'Mar':3,'Apr':4,'May':5,'Jun':6,'Jul':7,'Aug':8,'Sep':9,'Oct':10,'Nov':11,'Dec':12}
     for m in bm_months:
-        mn = month_map.get(m, 1)
-        yr = 2025 if mn >= 6 else 2026  # Sep-Dec 2025, Jan+ 2026
+        mn = month_map_num.get(m, 1)
+        yr = 2025 if mn >= 6 else 2026
         import calendar
         total = calendar.monthrange(yr, mn)[1]
-        # If this month is current month, elapsed = today's day - 1 (or today's day depending on time)
-        if yr == today.year and mn == today.month:
-            elapsed = min(today.day, total)
-        elif (yr < today.year) or (yr == today.year and mn < today.month):
-            elapsed = total  # past month = fully elapsed
-        else:
-            elapsed = 0  # future month
+        elapsed = gr_max_day.get(m, 0)
+        if elapsed == 0:
+            # Fallback: if month is fully past, set elapsed = total
+            today = datetime.now()
+            if (yr < today.year) or (yr == today.year and mn < today.month):
+                elapsed = total
         month_days[m] = {'total': total, 'elapsed': elapsed}
 
     replacements['/*__MONTH_DAYS__*/'] = json.dumps(month_days)
