@@ -15,7 +15,7 @@ Expected files in data/:
   - Overall_status_of_activation_stores.xlsx  (Activation stores)
 """
 
-import os, sys, json, subprocess
+import os, sys, json, subprocess, re
 from datetime import datetime, timedelta
 from pathlib import Path
 from collections import defaultdict
@@ -193,10 +193,13 @@ def parse_gr(gr_path, terr_feb, terr_mar):
     current_ats_by_col = {}  # {col_index: ats_name} for current store
     current_store = None
     matched = unmatched = 0
+    all_gr_stores = set()  # Collect all store names for matching engine
+    gr_ats_stores = defaultdict(set)  # {ats: set of store_ids} for coverage calc
 
     for row in ws.iter_rows(min_row=3, values_only=True):
         if row[0]:
             current_store = str(row[0]).strip()
+            all_gr_stores.add(current_store)
             prov = str(row[1] or '').strip().lower()
             city = str(row[2] or '').strip().lower()
             brgy = str(row[3] or '').strip().lower()
@@ -207,6 +210,10 @@ def parse_gr(gr_path, terr_feb, terr_mar):
             ats_mar = tb_mar.get((prov, city, brgy)) or tc_mar.get((prov, city))
             if ats_feb: ats_feb = ATS_ALIASES.get(ats_feb, ats_feb)
             if ats_mar: ats_mar = ATS_ALIASES.get(ats_mar, ats_mar)
+            # Collect store ID for coverage (use March territory as latest)
+            store_m = re.match(r'^.*?\((\d+)\)\s*$', current_store)
+            if store_m and ats_mar and ats_mar in ALL_ATS_SET:
+                gr_ats_stores[ats_mar].add(store_m.group(1))
             current_ats_by_col = {}
             for ci, d in dates:
                 ats = ats_mar if d >= MAR_START else ats_feb
@@ -253,7 +260,9 @@ def parse_gr(gr_path, terr_feb, terr_mar):
 
     return {'BM_W': bm_w, 'BM_WL': week_labels, 'BM_NW': NW,
             'BM_ML': list(month_map.keys()), 'BM_MR': list(month_map.values()),
-            'TEAM_BY_MONTH': team_by_month, 'GR_MAX_DAY': gr_max_day}
+            'TEAM_BY_MONTH': team_by_month, 'GR_MAX_DAY': gr_max_day,
+            'GR_STORES': sorted(all_gr_stores),
+            'GR_ATS_STORES': {ats: sorted(ids) for ats, ids in gr_ats_stores.items()}}
 
 
 # ─── PARSE ACTIVATION STORES (New Stores tab) ───────────────────────
@@ -612,6 +621,8 @@ def generate_html(bm_data, ns_data, churn_data=None):
         '/*__PLAN_BY_MONTH__*/': json.dumps(plan_by_month),
         '/*__TEAM_BY_MONTH__*/': json.dumps(bm_data.get('TEAM_BY_MONTH', {})),
         '/*__ALL_ATS__*/': json.dumps(ALL_ATS),
+        '/*__GR_STORES__*/': json.dumps(bm_data.get('GR_STORES', [])),
+        '/*__GR_ATS_STORES__*/': json.dumps(bm_data.get('GR_ATS_STORES', {})),
         '/*__UPDATE_DATE__*/': f"{date_range} (updated {datetime.now().strftime('%b %d, %H:%M')})",
     }
 

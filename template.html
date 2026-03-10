@@ -242,6 +242,24 @@ tr:hover .bm-c1,tr:hover .bm-c2{background:#f0f4fa}
       <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">06</span><h2>Store Opening Tracker</h2><span class="fo-sec-s">Phone collected, contract signed, rejection reasons</span></div><div id="fo-s4"></div></div>
       <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">07</span><h2>Competitors & Store Segmentation</h2><span class="fo-sec-s">Competitor presence, sales volume, categories</span></div><div id="fo-s7"></div></div>
     </div>
+    <div class="fo-sec" style="border-top:3px solid #4e79a7;padding-top:16px;margin-top:24px">
+      <div class="fo-sec-h"><span class="fo-sec-n">08</span><h2>Store Matching Center</h2><span class="fo-sec-s">Match visited stores to GR portfolio — upload Mapsly export</span></div>
+      <div id="vsUpWrap" style="padding:20px">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:16px">
+          <label class="fo-btn" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+            📍 Upload Visited Stores
+            <input type="file" id="vsFileIn" accept=".csv,.xlsx" style="display:none">
+          </label>
+          <label class="fo-btn" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+            📎 Import Mapping
+            <input type="file" id="vsMappingIn" accept=".csv,.xlsx" style="display:none">
+          </label>
+          <button class="fo-btn" id="vsExportBtn" style="display:none" onclick="vsExportMapping()">⬇ Export Mapping</button>
+          <span id="vsStatus" style="font-size:11px;color:#999"></span>
+        </div>
+        <div id="vsMatchCenter"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -258,6 +276,8 @@ const ML=/*__NS_ML__*/;
 const OL=["Jan 5 – Feb 16"];
 const TEAM_BY_MONTH=/*__TEAM_BY_MONTH__*/;
 const ALL_ATS_LIST=/*__ALL_ATS__*/;
+const GR_STORES=/*__GR_STORES__*/;
+const GR_ATS_STORES=/*__GR_ATS_STORES__*/;
 const PC="#4e79a7",OC="#f28e2b",GC="#59a14f",RC="#e15759",TC="#76b7b2";
 
 // ─── PORTFOLIO weekly ───
@@ -1812,6 +1832,368 @@ function foS7draw(){
 }
 
 })();
+
+/* ═══════════════════════════════════════════════════════════════════
+   STORE MATCHING CENTER
+   ═══════════════════════════════════════════════════════════════════ */
+
+const VS_ATS_ALIASES={
+  "Dad Ivan Navidad":"Dad Ivan Natividad",
+  "Robin Mark De Guzman Quito":"Robin Mark Quito",
+  "Henry Ross Maglaqui Sabarillo":"Henry Sabarillo",
+  "Maria Sheena Magtibay Garcia":"Maria Sheena Garcia",
+  "Mery Ann Melvida":"Mary Anne Melvida",
+};
+
+/* Build GR store index */
+const GR_IDX={};// norm -> [{full, name, id}]
+const GR_BY_ID={};// id -> {full, name, norm}
+GR_STORES.forEach(full=>{
+  const m=full.match(/^(.*?)\s*\((\d+)\)\s*$/);
+  if(!m) return;
+  const name=m[1].trim(), id=m[2];
+  const n=vsNorm(name);
+  if(!GR_IDX[n]) GR_IDX[n]=[];
+  GR_IDX[n].push({full,name,id});
+  GR_BY_ID[id]={full,name,norm:n};
+});
+
+function vsNorm(s){
+  s=s.trim().toLowerCase();
+  s=s.replace(/,\s*(activation|reactivation|portfolio|store opening)\s*$/i,'');
+  s=s.replace(/&/g,'and').replace(/√±/g,'n').replace(/ñ/g,'n').replace(/\xf1/g,'n');
+  s=s.replace(/[^\w\s]/g,' ').replace(/\s+/g,' ').trim();
+  return s;
+}
+function vsExtractType(raw){
+  for(const vt of['Activation','Reactivation','Portfolio','Store Opening']){
+    if(raw.trimEnd().endsWith(', '+vt)) return{name:raw.slice(0,raw.lastIndexOf(', '+vt)).trim(),type:vt};
+  }
+  return{name:raw.trim(),type:null};
+}
+
+/* Fuzzy: simple token overlap score */
+function vsFuzzy(a,b){
+  const ta=a.split(' ').filter(Boolean),tb=b.split(' ').filter(Boolean);
+  if(!ta.length||!tb.length) return 0;
+  const sa=new Set(ta),sb=new Set(tb);
+  let common=0; sa.forEach(t=>{if(sb.has(t))common++});
+  return common*2/(sa.size+sb.size);
+}
+
+let VS_DATA=[];// raw visited rows
+let VS_MATCHES={};// norm_key -> {gr_full, gr_id, confidence, method}
+let VS_RECORDS=[];// processed records
+
+/* Load from localStorage */
+try{const saved=JSON.parse(localStorage.getItem('vs_mapping')||'{}');VS_MATCHES=saved;}catch{}
+
+function vsMatch(visited_norm){
+  /* Check manual/saved mapping first */
+  if(VS_MATCHES[visited_norm]&&VS_MATCHES[visited_norm].method==='manual') return VS_MATCHES[visited_norm];
+  
+  /* 1. Exact */
+  if(GR_IDX[visited_norm]){
+    const entries=GR_IDX[visited_norm];
+    if(entries.length===1) return{gr_full:entries[0].full,gr_id:entries[0].id,confidence:1.0,method:'exact'};
+    /* Ambiguous — multiple GR stores with same norm name */
+    return{gr_full:entries[0].full,gr_id:entries[0].id,confidence:0.85,method:'ambiguous'};
+  }
+  /* 2. Containment */
+  for(const[gn,entries] of Object.entries(GR_IDX)){
+    if(visited_norm.length>=5&&gn.length>=5){
+      if(visited_norm.includes(gn)||gn.includes(visited_norm)){
+        const ratio=Math.min(visited_norm.length,gn.length)/Math.max(visited_norm.length,gn.length);
+        if(ratio>0.7){
+          if(entries.length===1) return{gr_full:entries[0].full,gr_id:entries[0].id,confidence:0.9,method:'contain'};
+          return{gr_full:entries[0].full,gr_id:entries[0].id,confidence:0.8,method:'contain_ambig'};
+        }
+      }
+    }
+  }
+  /* 3. Fuzzy (token overlap) */
+  let best=[],bestScore=0;
+  for(const[gn,entries] of Object.entries(GR_IDX)){
+    const sc=vsFuzzy(visited_norm,gn);
+    if(sc>bestScore){bestScore=sc;best=[{gn,entries}]}
+    else if(sc===bestScore&&sc>0.5) best.push({gn,entries});
+  }
+  if(bestScore>=0.85&&best.length===1){
+    const e=best[0].entries[0];
+    return{gr_full:e.full,gr_id:e.id,confidence:+(bestScore).toFixed(2),method:'fuzzy'};
+  }
+  if(bestScore>=0.7&&best.length<=3){
+    const e=best[0].entries[0];
+    return{gr_full:e.full,gr_id:e.id,confidence:+(bestScore).toFixed(2),method:'low_conf'};
+  }
+  if(best.length&&bestScore>0.4){
+    const e=best[0].entries[0];
+    return{gr_full:e.full,gr_id:e.id,confidence:+(bestScore).toFixed(2),method:'unmatched'};
+  }
+  return{gr_full:null,gr_id:null,confidence:0,method:'unmatched'};
+}
+
+function vsProcess(){
+  VS_RECORDS=[];
+  const stats={total:0,auto:0,low:0,unmatched:0};
+  VS_DATA.forEach(r=>{
+    const raw=r['Visited Record Name']||r['visited_record_name']||'';
+    const ownerRaw=(r['Owner (NAME)']||r['owner_name']||'').trim();
+    const owner=VS_ATS_ALIASES[ownerRaw]||ownerRaw;
+    const dateStr=(r['Check-in Datetime']||r['checkin_datetime']||'').slice(0,10);
+    const{name:clean,type:vtype}=vsExtractType(raw);
+    const vn=vsNorm(clean);
+    /* Check saved mapping */
+    let match=VS_MATCHES[vn]&&VS_MATCHES[vn].method==='manual'?VS_MATCHES[vn]:vsMatch(vn);
+    const rec={raw,clean,norm:vn,owner,date:dateStr,vtype,
+      gr_full:match.gr_full,gr_id:match.gr_id,confidence:match.confidence,method:match.method};
+    VS_RECORDS.push(rec);
+    stats.total++;
+    if(match.confidence>=0.85) stats.auto++;
+    else if(match.confidence>=0.7) stats.low++;
+    else stats.unmatched++;
+  });
+  return stats;
+}
+
+function vsSaveMapping(){
+  const manual={};
+  VS_RECORDS.forEach(r=>{
+    if(r.method==='manual'||r.confidence>=0.85){
+      manual[r.norm]={gr_full:r.gr_full,gr_id:r.gr_id,confidence:r.confidence,method:r.method};
+    }
+  });
+  Object.assign(manual,VS_MATCHES);
+  try{localStorage.setItem('vs_mapping',JSON.stringify(manual))}catch{}
+}
+
+function vsRender(){
+  const stats=vsProcess();
+  let h='';
+  
+  /* Summary cards */
+  h+=`<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">`;
+  h+=`<div style="background:#f7f8fb;border-radius:8px;padding:12px 16px;min-width:120px;text-align:center"><div style="font-size:24px;font-weight:700">${stats.total}</div><div style="font-size:10px;color:#999;text-transform:uppercase">Total Visited</div></div>`;
+  h+=`<div style="background:#e8f5e9;border-radius:8px;padding:12px 16px;min-width:120px;text-align:center"><div style="font-size:24px;font-weight:700;color:#0d7c5f">${stats.auto}</div><div style="font-size:10px;color:#666;text-transform:uppercase">Auto-Matched</div></div>`;
+  h+=`<div style="background:#fff3e0;border-radius:8px;padding:12px 16px;min-width:120px;text-align:center"><div style="font-size:24px;font-weight:700;color:#e37400">${stats.low}</div><div style="font-size:10px;color:#666;text-transform:uppercase">Low Confidence</div></div>`;
+  h+=`<div style="background:#fce4ec;border-radius:8px;padding:12px 16px;min-width:120px;text-align:center"><div style="font-size:24px;font-weight:700;color:#c5221f">${stats.unmatched}</div><div style="font-size:10px;color:#666;text-transform:uppercase">Unmatched</div></div>`;
+  h+=`<div style="background:#e3f2fd;border-radius:8px;padding:12px 16px;min-width:120px;text-align:center"><div style="font-size:24px;font-weight:700;color:#4e79a7">${(stats.auto/stats.total*100).toFixed(0)}%</div><div style="font-size:10px;color:#666;text-transform:uppercase">Match Rate</div></div>`;
+  h+=`</div>`;
+  
+  /* Unmatched / Low confidence queue */
+  const queue=VS_RECORDS.filter(r=>r.confidence<0.85).sort((a,b)=>b.confidence-a.confidence);
+  if(queue.length){
+    h+=`<div style="margin-bottom:16px"><div style="font-size:10px;color:#999;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Manual Matching Queue (${queue.length})</div>`;
+    h+=`<div style="overflow:auto;max-height:50vh"><table style="width:100%;font-size:11px;border-collapse:collapse">`;
+    h+=`<thead><tr style="background:#f7f8fb;position:sticky;top:0;z-index:2"><th style="text-align:left;padding:6px 8px">Visited Store</th><th style="text-align:left;padding:6px 8px">ATS</th><th style="padding:6px 8px">Date</th><th style="text-align:left;padding:6px 8px">Suggested GR Store</th><th style="padding:6px 8px">Conf.</th><th style="padding:6px 8px">Method</th><th style="padding:6px 8px">Action</th></tr></thead><tbody>`;
+    queue.forEach((r,qi)=>{
+      const bg=qi%2?'#fafafa':'#fff';
+      const confCol=r.confidence>=0.7?'#e37400':'#c5221f';
+      h+=`<tr style="background:${bg};border-bottom:1px solid #eee">`;
+      h+=`<td style="padding:4px 8px;font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.clean}">${r.clean}</td>`;
+      h+=`<td style="padding:4px 8px;white-space:nowrap">${r.owner}</td>`;
+      h+=`<td style="padding:4px 8px;text-align:center">${r.date}</td>`;
+      h+=`<td style="padding:4px 8px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.gr_full||''}">${r.gr_full||'<span style="color:#ccc">—</span>'}</td>`;
+      h+=`<td style="padding:4px 8px;text-align:center;color:${confCol};font-weight:600">${(r.confidence*100).toFixed(0)}%</td>`;
+      h+=`<td style="padding:4px 8px;text-align:center;font-size:10px;color:#999">${r.method}</td>`;
+      h+=`<td style="padding:4px 8px;text-align:center"><button class="fo-btn" style="font-size:10px;padding:2px 8px" onclick="vsConfirm('${r.norm.replace(/'/g,"\\'")}','${(r.gr_id||'').replace(/'/g,"\\'")}')">✓</button></td>`;
+      h+=`</tr>`;
+    });
+    h+=`</tbody></table></div></div>`;
+  }
+
+  /* Impact summary: matched visits by ATS */
+  const matchedRecs=VS_RECORDS.filter(r=>r.confidence>=0.85&&ALL_ATS_LIST.includes(r.owner));
+  if(matchedRecs.length){
+    const byAts={};
+    matchedRecs.forEach(r=>{
+      if(!byAts[r.owner]) byAts[r.owner]={visits:0,stores:new Set(),dates:new Set(),types:{}};
+      byAts[r.owner].visits++;
+      if(r.gr_id) byAts[r.owner].stores.add(r.gr_id);
+      if(r.date) byAts[r.owner].dates.add(r.date);
+      const vt=r.vtype||'Unknown';
+      byAts[r.owner].types[vt]=(byAts[r.owner].types[vt]||0)+1;
+    });
+
+    /* Get BM active stores for latest week and latest month */
+    const lastWi=BM_W[ALL_ATS_LIST[0]]?.sa?.length-1||0;
+    /* Sum last 4 weeks (Feb) for monthly active */
+    const bmMl=BM_ML||[];
+    const bmMr=BM_MR||[];
+    const lastMi=bmMl.length-1;
+    const lastMonthWeeks=lastMi>=0?bmMr[lastMi]:[];
+
+    h+=`<div style="margin-top:16px"><div style="font-size:10px;color:#999;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Visit Coverage vs Business Metrics — NCR ATS</div>`;
+    h+=`<div style="overflow-x:auto"><table style="width:100%;font-size:11px;border-collapse:collapse"><thead><tr style="background:#f7f8fb">`;
+    h+=`<th style="text-align:left;padding:6px 8px;white-space:nowrap">ATS</th>`;
+    h+=`<th style="padding:6px 8px;white-space:nowrap" title="All stores assigned to ATS in GR">GR Base</th>`;
+    h+=`<th style="padding:6px 8px;white-space:nowrap" title="Stores with apps in latest month (BM)">BM Active</th>`;
+    h+=`<th style="padding:6px 8px;white-space:nowrap" title="Unique matched stores from check-ins">Visited</th>`;
+    h+=`<th style="padding:6px 8px;white-space:nowrap" title="Visited / GR Base">vs Base</th>`;
+    h+=`<th style="padding:6px 8px;white-space:nowrap" title="Visited / BM Active Stores">vs Active</th>`;
+    h+=`<th style="padding:6px 8px;white-space:nowrap">Visits</th>`;
+    h+=`<th style="padding:6px 8px;white-space:nowrap">Days</th>`;
+    h+=`<th style="padding:6px 8px;white-space:nowrap;color:#e65100">Act</th>`;
+    h+=`<th style="padding:6px 8px;white-space:nowrap;color:#7b1fa2">React</th>`;
+    h+=`<th style="padding:6px 8px;white-space:nowrap;color:#4e79a7">Port</th>`;
+    h+=`<th style="padding:6px 8px;white-space:nowrap;color:#0d7c5f">SO</th>`;
+    h+=`</tr></thead><tbody>`;
+
+    const sorted=ALL_ATS_LIST.filter(n=>byAts[n]).sort((a,b)=>(byAts[b]?.visits||0)-(byAts[a]?.visits||0));
+    sorted.forEach((n,i)=>{
+      const d=byAts[n];
+      const grBase=(GR_ATS_STORES[n]||[]).length;
+      /* BM active: max stores w/ apps across last month's weeks */
+      const bmD=BM_W[n];
+      const bmActive=bmD?Math.max(...lastMonthWeeks.map(wi=>bmD.sa[wi]||0)):0;
+      const visited=d.stores.size;
+      const vsBase=grBase>0?Math.round(visited/grBase*100):0;
+      const vsActive=bmActive>0?Math.round(visited/bmActive*100):0;
+      const bCol=vsBase>=50?'#0d7c5f':vsBase>=25?'#e37400':'#c5221f';
+      const aCol=vsActive>=100?'#0d7c5f':vsActive>=50?'#4e79a7':vsActive>=25?'#e37400':'#c5221f';
+      h+=`<tr style="background:${i%2?'#fafafa':'#fff'};border-bottom:1px solid #eee">`;
+      h+=`<td style="padding:4px 8px;font-weight:600;white-space:nowrap">${n}</td>`;
+      h+=`<td style="padding:4px 8px;text-align:center;color:#999">${grBase||'—'}</td>`;
+      h+=`<td style="padding:4px 8px;text-align:center;color:#4e79a7;font-weight:600">${bmActive||'—'}</td>`;
+      h+=`<td style="padding:4px 8px;text-align:center;font-weight:700">${visited}</td>`;
+      h+=`<td style="padding:4px 8px;text-align:center;font-weight:700;color:${bCol}">${vsBase}%</td>`;
+      h+=`<td style="padding:4px 8px;text-align:center;font-weight:700;color:${aCol}">${vsActive>999?'999+':vsActive}%</td>`;
+      h+=`<td style="padding:4px 8px;text-align:center">${d.visits}</td>`;
+      h+=`<td style="padding:4px 8px;text-align:center">${d.dates.size}</td>`;
+      h+=`<td style="padding:4px 8px;text-align:center;color:#e65100">${d.types['Activation']||'·'}</td>`;
+      h+=`<td style="padding:4px 8px;text-align:center;color:#7b1fa2">${d.types['Reactivation']||'·'}</td>`;
+      h+=`<td style="padding:4px 8px;text-align:center;color:#4e79a7">${d.types['Portfolio']||'·'}</td>`;
+      h+=`<td style="padding:4px 8px;text-align:center;color:#0d7c5f">${d.types['Store Opening']||'·'}</td>`;
+      h+=`</tr>`;
+    });
+    /* Total row */
+    const totBase=ALL_ATS_LIST.reduce((s,n)=>s+(GR_ATS_STORES[n]||[]).length,0);
+    const totBmActive=ALL_ATS_LIST.reduce((s,n)=>{const d=BM_W[n];return s+(d?Math.max(...lastMonthWeeks.map(wi=>d.sa[wi]||0)):0)},0);
+    const totVisited=new Set(sorted.flatMap(n=>[...(byAts[n]?.stores||[])])).size;
+    const totV=sorted.reduce((s,n)=>s+(byAts[n]?.visits||0),0);
+    const totVsBase=totBase>0?Math.round(totVisited/totBase*100):0;
+    const totVsActive=totBmActive>0?Math.round(totVisited/totBmActive*100):0;
+    h+=`<tr style="border-top:2px solid #333;font-weight:700;background:#f7f8fb"><td style="padding:4px 8px">TOTAL</td>`;
+    h+=`<td style="padding:4px 8px;text-align:center">${totBase}</td>`;
+    h+=`<td style="padding:4px 8px;text-align:center;color:#4e79a7">${totBmActive}</td>`;
+    h+=`<td style="padding:4px 8px;text-align:center">${totVisited}</td>`;
+    h+=`<td style="padding:4px 8px;text-align:center">${totVsBase}%</td>`;
+    h+=`<td style="padding:4px 8px;text-align:center">${totVsActive}%</td>`;
+    h+=`<td style="padding:4px 8px;text-align:center">${totV}</td>`;
+    h+=`<td style="padding:4px 8px;text-align:center">—</td>`;
+    ['Activation','Reactivation','Portfolio','Store Opening'].forEach(vt=>{
+      const tot=sorted.reduce((s,n)=>s+(byAts[n]?.types[vt]||0),0);
+      h+=`<td style="padding:4px 8px;text-align:center">${tot||'·'}</td>`;
+    });
+    h+=`</tr></tbody></table></div></div>`;
+  }
+  
+  document.getElementById('vsMatchCenter').innerHTML=h;
+  document.getElementById('vsExportBtn').style.display=VS_RECORDS.length?'inline-flex':'none';
+}
+
+function vsConfirm(norm,grId){
+  const gr=GR_BY_ID[grId];
+  if(!gr) return;
+  VS_MATCHES[norm]={gr_full:gr.full,gr_id:grId,confidence:1.0,method:'manual'};
+  vsSaveMapping();
+  vsRender();
+}
+
+function vsExportMapping(){
+  let csv='visited_store_name_raw,matched_gr_store_id,matched_gr_store_fullname,confidence,method\n';
+  VS_RECORDS.forEach(r=>{
+    csv+=`"${(r.clean||'').replace(/"/g,'""')}","${r.gr_id||''}","${(r.gr_full||'').replace(/"/g,'""')}",${r.confidence},${r.method}\n`;
+  });
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='store_mapping_export.csv';
+  a.click();
+}
+
+/* File upload handlers */
+document.getElementById('vsFileIn').onchange=e=>{
+  if(!e.target.files.length) return;
+  const f=e.target.files[0];
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      if(f.name.endsWith('.csv')){
+        const text=ev.target.result;
+        const lines=text.split('\n');
+        const headers=lines[0].split(',').map(h=>h.replace(/^"|"$/g,'').trim());
+        VS_DATA=[];
+        for(let i=1;i<lines.length;i++){
+          if(!lines[i].trim()) continue;
+          /* Simple CSV parse handling quoted fields */
+          const vals=[];let cur='',inQ=false;
+          for(const ch of lines[i]){
+            if(ch==='"'){inQ=!inQ}
+            else if(ch===','&&!inQ){vals.push(cur.trim());cur=''}
+            else cur+=ch;
+          }
+          vals.push(cur.trim());
+          const row={};
+          headers.forEach((h,j)=>{row[h]=vals[j]||''});
+          VS_DATA.push(row);
+        }
+      } else {
+        const wb=XLSX.read(ev.target.result,{type:'array',cellDates:true});
+        VS_DATA=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+      }
+      document.getElementById('vsStatus').textContent=f.name+' · '+VS_DATA.length+' rows';
+      vsRender();
+    }catch(err){alert('Error loading visited stores: '+err.message)}
+  };
+  if(f.name.endsWith('.csv')) reader.readAsText(f);
+  else reader.readAsArrayBuffer(f);
+};
+
+document.getElementById('vsMappingIn').onchange=e=>{
+  if(!e.target.files.length) return;
+  const f=e.target.files[0];
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      let rows;
+      if(f.name.endsWith('.csv')){
+        const text=ev.target.result;
+        const lines=text.split('\n');
+        const headers=lines[0].split(',').map(h=>h.replace(/^"|"$/g,'').trim());
+        rows=[];
+        for(let i=1;i<lines.length;i++){
+          if(!lines[i].trim()) continue;
+          const vals=[];let cur='',inQ=false;
+          for(const ch of lines[i]){if(ch==='"')inQ=!inQ;else if(ch===','&&!inQ){vals.push(cur.trim());cur=''}else cur+=ch}
+          vals.push(cur.trim());
+          const row={};headers.forEach((h,j)=>{row[h]=vals[j]||''});rows.push(row);
+        }
+      } else {
+        const wb=XLSX.read(ev.target.result,{type:'array'});
+        rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+      }
+      let imported=0;
+      rows.forEach(r=>{
+        const raw=r.visited_store_name_raw||r['Visited Record Name']||'';
+        const grId=r.matched_gr_store_id||r.matched_store_id||'';
+        const grFull=r.matched_gr_store_fullname||'';
+        if(!raw) return;
+        const norm=vsNorm(raw);
+        if(grId&&GR_BY_ID[grId]){
+          VS_MATCHES[norm]={gr_full:GR_BY_ID[grId].full,gr_id:grId,confidence:1.0,method:'manual'};imported++;
+        } else if(grFull){
+          VS_MATCHES[norm]={gr_full:grFull,gr_id:'',confidence:0.95,method:'imported'};imported++;
+        }
+      });
+      vsSaveMapping();
+      document.getElementById('vsStatus').textContent+=` | Mapping: ${imported} imported`;
+      if(VS_DATA.length) vsRender();
+    }catch(err){alert('Error loading mapping: '+err.message)}
+  };
+  if(f.name.endsWith('.csv')) reader.readAsText(f);
+  else reader.readAsArrayBuffer(f);
+};
 
 go('bizmetrics');
 
