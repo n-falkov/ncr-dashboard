@@ -24,7 +24,7 @@ body{font-family:'Source Sans 3','Trebuchet MS',sans-serif;background:#f7f7f7;co
 .dv{height:20px;width:1px;background:#e0e0e0}
 .lg{display:flex;align-items:center;gap:6px;font-size:11px;color:#666;font-weight:500}
 .lb{width:14px;height:14px;border-radius:1px}
-.bd{padding:16px}
+.bd{padding:16px;max-width:100%;overflow-x:hidden}
 .row{display:grid;gap:12px;margin-bottom:12px}
 .r5{grid-template-columns:repeat(5,1fr)}.r4{grid-template-columns:repeat(4,1fr)}.r3{grid-template-columns:repeat(3,1fr)}.r2{grid-template-columns:1fr 1fr}.r1{grid-template-columns:1fr}
 .kpi{background:#fff;border:1px solid #e0e0e0;padding:16px 20px;text-align:center}
@@ -48,6 +48,7 @@ tr.alt{background:#fafafa}
 tr.sum{border-top:2px solid #4a4a4a;background:#f0f0f0;font-weight:700}
 .ft{padding:12px 20px;border-top:1px solid #e0e0e0;display:flex;justify-content:space-between;font-size:10px;color:#999}
 .hd{display:none}
+.tbl-wrap{overflow:auto;max-width:100%;position:relative}
 .pbar{height:8px;background:#e8e8e8;border-radius:4px;overflow:hidden;margin-top:4px}
 .pbar-fill{height:100%;border-radius:4px;transition:width .3s}
 .status-badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;letter-spacing:.5px}
@@ -82,7 +83,7 @@ tr.sum{border-top:2px solid #4a4a4a;background:#f0f0f0;font-weight:700}
 .fo-kl{font-size:9px;color:#999;text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:6px}
 .fo-kv{font-size:24px;font-weight:700;color:#333}
 .fo-ks{font-size:10px;color:#999;margin-top:3px}
-.fo-sec{margin-bottom:18px}
+.fo-sec{margin-bottom:18px;overflow:hidden}
 .fo-sec-h{display:flex;align-items:baseline;gap:10px;padding:0 0 8px;border-bottom:2px solid #e0e0e0;margin-bottom:10px}
 .fo-sec-n{font-size:10px;font-weight:700;color:#4e79a7;background:#e8f0fe;padding:2px 6px;border-radius:3px}
 .fo-sec-h h2{font-size:13px;font-weight:700;color:#333}
@@ -96,9 +97,13 @@ tr.sum{border-top:2px solid #4a4a4a;background:#f0f0f0;font-weight:700}
 .fo-card th{padding:6px 8px;text-align:center;font-size:10px;font-weight:700;color:#4a4a4a;background:#f0f0f0;white-space:nowrap}
 .fo-card td{padding:5px 8px;font-size:11px;border-bottom:1px solid #f0f0f0}
 .fo-card tr:last-child td{border-bottom:none}
-.fo-rn{font-weight:600;white-space:nowrap;position:sticky;left:0;background:#fff;z-index:1;padding:4px 8px}
-.fo-col1{position:sticky;left:0;white-space:nowrap;padding:4px 8px}
-.fo-col2{position:sticky;left:0;white-space:nowrap;padding:4px 8px}
+.fo-rn{font-weight:600;white-space:nowrap;position:sticky;left:0;background:#fff;z-index:3;padding:4px 8px}
+.fo-col1{position:sticky;left:0;white-space:nowrap;padding:4px 8px;background:#fff;z-index:3;min-width:120px}
+.fo-col2{position:sticky;left:0;white-space:nowrap;padding:4px 8px;background:#fff;z-index:2;border-right:1px solid #e0e0e0;box-shadow:2px 0 4px rgba(0,0,0,0.04)}
+thead .fo-col1{z-index:12;background:#f0f0f0}
+thead .fo-col2{z-index:11;background:#f0f0f0}
+tr:hover .fo-col1,tr:hover .fo-col2{background:#f0f4fa}
+.fo-rt .fo-col1,.fo-rt .fo-col2{background:#f7f8fb}
 .bm-tbl{border-collapse:separate;border-spacing:0}
 .bm-tbl thead th{position:sticky;top:0;background:#f7f8fb;z-index:3;border-bottom:2px solid #e0e0e0}
 :root{--bm-c1w:clamp(200px,18vw,260px);--bm-c2w:clamp(120px,12vw,170px)}
@@ -203,16 +208,39 @@ tr:hover .bm-c1,tr:hover .bm-c2{background:#f0f4fa}
         <div class="fo-ctrl-l">
           <div class="fo-badge"><div class="dot"></div><span id="foFN">—</span></div>
         </div>
-        <div style="display:flex;gap:6px">
+        <div style="display:flex;gap:6px;align-items:center">
           <button class="fo-btn" onclick="document.getElementById('foRIn').click()">↻ Reload</button>
           <input type="file" id="foRIn" accept=".xlsx,.xls,.csv" style="display:none">
+          <button class="fo-btn" id="foHelpBtn" onclick="const m=document.getElementById('foHelpModal');m.style.display=m.style.display==='flex'?'none':'flex'" style="width:28px;height:28px;padding:0;font-size:14px;font-weight:700;border-radius:50%;display:flex;align-items:center;justify-content:center" title="How quality is calculated">?</button>
         </div>
       </div>
-      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">01</span><h2>Daily Tracker</h2><span class="fo-sec-s">Visits per ATS per day, by type</span></div><div id="fo-s1"></div></div>
-      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">02</span><h2>Activation Tracker</h2><span class="fo-sec-s">Visits, offers, applications, activations by loan</span></div><div id="fo-s2"></div></div>
-      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">03</span><h2>Reactivation Tracker</h2><span class="fo-sec-s">Visits, offers, applications, reactivations by loan</span></div><div id="fo-s3"></div></div>
-      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">04</span><h2>Store Opening Tracker</h2><span class="fo-sec-s">Phone collected, contract signed, rejection reasons</span></div><div id="fo-s4"></div></div>
-      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">05</span><h2>Competitors & Store Segmentation</h2><span class="fo-sec-s">Competitor presence, sales volume, categories</span></div><div id="fo-s7"></div></div>
+      <div id="foHelpModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.35);z-index:100;align-items:center;justify-content:center">
+        <div style="background:#fff;border-radius:10px;max-width:520px;width:90%;box-shadow:0 8px 30px rgba(0,0,0,0.2);overflow:hidden">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid #eee">
+            <h3 style="margin:0;font-size:14px">Visit Quality Score — How It Works</h3>
+            <button onclick="document.getElementById('foHelpModal').style.display='none'" style="background:none;border:none;font-size:18px;cursor:pointer;color:#999;padding:0 4px">✕</button>
+          </div>
+          <div style="padding:16px 18px;font-size:12px;line-height:1.6;color:#444">
+            <p style="margin:0 0 10px"><b style="color:#4e79a7">Activation</b> · <b style="color:#f28e2b">Reactivation</b> · <b style="color:#59a14f">Portfolio</b></p>
+            <p style="margin:0 0 6px">Score 0–100% based on 3 criteria (each ~33%):</p>
+            <p style="margin:0 0 4px;padding-left:12px">✓ RA passed online training</p>
+            <p style="margin:0 0 4px;padding-left:12px">✓ Triggers for Salmon loan explained</p>
+            <p style="margin:0 0 12px;padding-left:12px">✓ Marketing materials installed</p>
+            <p style="margin:0 0 10px"><b style="color:#e15759">Store Opening</b></p>
+            <p style="margin:0 0 4px;padding-left:12px">✓ Contract signed → <b>100%</b></p>
+            <p style="margin:0 0 4px;padding-left:12px">✓ Phone number collected (no contract) → <b>50%</b></p>
+            <p style="margin:0 0 12px;padding-left:12px">✗ Neither → <b>0%</b></p>
+            <p style="margin:0;color:#999;font-size:11px">Each cell shows avg score across visits that day. Number in brackets = visit count.</p>
+          </div>
+        </div>
+      </div>
+      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">01</span><h2>Visit Quality Score</h2><span class="fo-sec-s">RA readiness, marketing materials, contract & phone — by visit type</span></div><div id="fo-s0"></div></div>
+      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">02</span><h2>Daily Tracker</h2><span class="fo-sec-s">Visits per ATS per day, by type</span></div><div id="fo-s1"></div></div>
+      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">03</span><h2>Activation Tracker</h2><span class="fo-sec-s">Visits, offers, applications, activations by loan</span></div><div id="fo-s2"></div></div>
+      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">04</span><h2>Reactivation Tracker</h2><span class="fo-sec-s">Visits, offers, applications, reactivations by loan</span></div><div id="fo-s3"></div></div>
+      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">05</span><h2>Portfolio Tracker</h2><span class="fo-sec-s">Visits, RA training, new RAs, marketing materials</span></div><div id="fo-s3b"></div></div>
+      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">06</span><h2>Store Opening Tracker</h2><span class="fo-sec-s">Phone collected, contract signed, rejection reasons</span></div><div id="fo-s4"></div></div>
+      <div class="fo-sec"><div class="fo-sec-h"><span class="fo-sec-n">07</span><h2>Competitors & Store Segmentation</h2><span class="fo-sec-s">Competitor presence, sales volume, categories</span></div><div id="fo-s7"></div></div>
     </div>
   </div>
 </div>
@@ -809,13 +837,13 @@ function rChurn(){
         const vals=data[n]||new Array(tLabels.length).fill(0);
         const avg=+(vals.reduce((s,v)=>s+v,0)/vals.length).toFixed(1);
         t+='<tr style="border-bottom:1px solid #eee">';
-        t+=`<td style="font-weight:600;white-space:nowrap;font-size:11px;position:sticky;left:0;background:#fff;z-index:1">${n}</td>`;
+        t+=`<td style="font-weight:600;white-space:nowrap;font-size:11px;position:sticky;left:0;background:#fff;z-index:3">${n}</td>`;
         vals.forEach(v=>{const col=v>=30?'#c5221f':v>=20?'#e37400':v>=10?'#333':'#0d7c5f';t+=`<td style="text-align:center;font-size:11px;color:${col};font-weight:${v>=25?700:400}">${v}%</td>`;});
         t+=`<td style="text-align:center;background:#f7f8fb;font-weight:700;font-size:11px">${avg}%</td></tr>`;
       });
       t+=`<tr><td style="height:2px;background:${gc}"></td><td colspan="${tLabels.length+1}" style="height:2px;background:${gc}"></td></tr>`;
       t+='<tr class="fo-rt" style="border-bottom:3px solid #333">';
-      t+=`<td style="font-size:10px;font-weight:700;position:sticky;left:0;background:#fff;z-index:1">${label} Avg</td>`;
+      t+=`<td style="font-size:10px;font-weight:700;position:sticky;left:0;background:#fff;z-index:3">${label} Avg</td>`;
       tLabels.forEach((_,i)=>{
         const v=+(group.map(n=>(data[n]||[])[i]||0).reduce((a,b)=>a+b,0)/group.length).toFixed(1);
         const col=v>=30?'#c5221f':v>=20?'#e37400':v>=10?'#333':'#0d7c5f';
@@ -858,8 +886,8 @@ function rChurn(){
         metricsA.forEach(({key,label:mLabel,color},mi)=>{
           const isFirst=mi===0, isLast=mi===mLen-1;
           at+=`<tr${isLast?' style="border-bottom:2px solid #e8e8e8"':''}>`; 
-          if(isFirst) at+=`<td rowspan="${mLen}" style="font-weight:600;white-space:nowrap;font-size:11px;vertical-align:top;padding-top:8px;position:sticky;left:0;background:#fff;z-index:1">${n}</td>`;
-          at+=`<td style="font-size:11px;color:${color};position:sticky;left:var(--bm-c1w);background:#fff;z-index:1">${mLabel}</td>`;
+          if(isFirst) at+=`<td rowspan="${mLen}" style="font-weight:600;white-space:nowrap;font-size:11px;vertical-align:top;padding-top:8px;position:sticky;left:0;background:#fff;z-index:3">${n}</td>`;
+          at+=`<td style="font-size:11px;color:${color};position:sticky;left:var(--bm-c1w);background:#fff;z-index:2;border-right:1px solid #e0e0e0;box-shadow:2px 0 4px rgba(0,0,0,0.04)">${mLabel}</td>`;
           CH_ML.forEach((_,i)=>{
             const v=(dataMap[key][n]||[])[i]||0;
             const fc=key==='churn'&&v>0?'#c5221f':key==='new'&&v>0?'#0d7c5f':key==='react'&&v>0?'#4e79a7':'#333';
@@ -872,8 +900,8 @@ function rChurn(){
       at+=`<tr><td colspan="2" style="height:2px;background:${gc}"></td><td colspan="${CH_ML.length}" style="height:2px;background:${gc}"></td></tr>`;
       metricsA.forEach(({key,label:mLabel,color},mi)=>{
         at+=`<tr class="fo-rt"${mi===mLen-1?' style="border-bottom:3px solid #333"':''}>`;
-        if(mi===0) at+=`<td rowspan="${mLen}" style="vertical-align:top;font-size:10px;font-weight:700;padding-top:6px;position:sticky;left:0;background:#fff;z-index:1">${label} Total</td>`;
-        at+=`<td style="font-size:10px;color:${color};font-weight:700;position:sticky;left:var(--bm-c1w);background:#fff;z-index:1">${mLabel}</td>`;
+        if(mi===0) at+=`<td rowspan="${mLen}" style="vertical-align:top;font-size:10px;font-weight:700;padding-top:6px;position:sticky;left:0;background:#fff;z-index:3">${label} Total</td>`;
+        at+=`<td style="font-size:10px;color:${color};font-weight:700;position:sticky;left:var(--bm-c1w);background:#fff;z-index:2;border-right:1px solid #e0e0e0;box-shadow:2px 0 4px rgba(0,0,0,0.04)">${mLabel}</td>`;
         CH_ML.forEach((_,i)=>{
           let sum=0; group.forEach(n=>{sum+=(dataMap[key][n]||[])[i]||0});
           const fc=key==='churn'&&sum>0?'#c5221f':key==='new'&&sum>0?'#0d7c5f':key==='react'&&sum>0?'#4e79a7':'#333';
@@ -1255,7 +1283,7 @@ window.genSnapshot=function(weekIdx){
 let FO_R=[];
 
 /* helpers */
-const fofc=(r,f)=>{const k=Object.keys(r).find(k=>k.toLowerCase().includes(f.toLowerCase()));return k?r[k]:''};
+const fofc=(r,f)=>{const fn=f.toLowerCase().replace(/\u00a0/g,' ');const k=Object.keys(r).find(k=>k.toLowerCase().replace(/\u00a0/g,' ').includes(fn));return k?r[k]:''};
 const fofk=(r,test)=>{const k=Object.keys(r).find(test);return k?r[k]:''};
 const fonum=v=>{const n=parseInt(v);return isNaN(n)?0:n};
 const fopct=(a,b)=>b?Math.round(a/b*100):0;
@@ -1263,41 +1291,57 @@ const fopct=(a,b)=>b?Math.round(a/b*100):0;
 /* Column accessors for v2 form */
 const fg={
   name:r=>fofc(r,'Name')||'',
-  store:r=>fofc(r,'Store name')||'',
-  type:r=>fofc(r,'type of visit')||'',
+  store:r=>fofc(r,'Store Name (COPY')||fofc(r,'Store name')||'',
+  type:r=>fofc(r,'Purpose of visit')||fofc(r,'type of visit')||'',
+  form:r=>fofc(r,'FORM:')||'',
   start:r=>fofc(r,'Start time')||'',
   end:r=>fofc(r,'Completion time')||'',
-  actSales:r=>fofc(r,'Store monthly sales overall')||'',
-  actComp:r=>fofk(r,k=>/^competitors visible in store\?$/i.test(k.trim()))||'',
-  actChecklist:r=>fofc(r,'Activation store readiness checklist')||'',
-  actReady:r=>fofc(r,'Store is fully ready to process the loans:')||'',
+  actSales:r=>fofc(r,'Store monthly sales overall')||fofc(r,'General sales volume')||'',
+  actComp:r=>fofk(r,k=>/^competitors visible in store\?$/i.test(k.trim()))||fofc(r,'Competitors visibility')||'',
+  actChecklist:r=>fofc(r,'Activation store readiness checklist')||fofc(r,'Technical readiness')||'',
+  actReady:r=>fofc(r,'Store is fully ready to process the loans:')||fofc(r,'Store technically ready')||'',
   actWhyNot:r=>{const k=Object.keys(r).find(k=>k.includes('If No: Briefly explain why')&&!k.includes('1'));return k?r[k]:''},
-  actSuccess:r=>fofc(r,'Store was activated by loan during the visit')||'',
-  reactComp:r=>fofk(r,k=>/^competitors visibility\u00a0$/i.test(k))||'',
-  reactReason:r=>fofc(r,'Reason store became inactive')||'',
-  reactChecklist:r=>fofc(r,'Reactivation store readiness checklist')||'',
+  actSuccess:r=>fofc(r,'Store was activated by loan during the visit')||fofc(r,'Is store activated by loan')||'',
+  reactComp:r=>fofk(r,k=>/^competitors visibility\u00a0$/i.test(k))||fofc(r,'Competitors visibility')||'',
+  reactReason:r=>fofc(r,'Reason store became inactive')||fofc(r,'Reason for not activated')||'',
+  reactChecklist:r=>fofc(r,'Reactivation store readiness checklist')||fofc(r,'Technical readiness')||'',
   reactNotReady:r=>fofc(r,'not ready, what needs')||'',
-  reactMarketing:r=>fofk(r,k=>/^marketing materials installed/i.test(k.trim()))||'',
+  reactMarketing:r=>fofk(r,k=>/^marketing materials installed/i.test(k.trim()))||fofc(r,'Marketing collaterals installed')||'',
   reactAttention:r=>fofc(r,'What needs attention')||'',
-  reactReady:r=>fofk(r,k=>/^store is fully ready to process the loans$/i.test(k.trim()))||'',
-  reactSuccess:r=>{const v=fofc(r,'reactivated by loan');return typeof v==='string'?v.trim():String(v||'')},
-  portComp:r=>fofk(r,k=>/^competitors visibility\u00a01$/i.test(k))||'',
-  portChecklist:r=>fofc(r,'Portfolio store checklist readiness')||'',
-  portMarketing:r=>fofk(r,k=>/^marketing materials in good condition/i.test(k.trim()))||'',
-  soCategory:r=>fofc(r,'Store category')||'',
-  soSales:r=>fofk(r,k=>/^monthly sales$/i.test(k.trim()))||'',
-  soComp:r=>fofk(r,k=>/^competitors visible in store\?\n$/i.test(k)||/^competitors visible in store\?\s*$/i.test(k)&&k!==Object.keys(r).find(k2=>/^competitors visible in store\?$/i.test(k2.trim())))||'',
-  soContract:r=>fofc(r,'Contract signed')||'',
-  soWhyNo:r=>fofc(r,'explain why1')||'',
-  soDocs:r=>fofc(r,'All documents collected')||'',
-  soPhone:r=>fofc(r,"owner phone")||'',
+  reactReady:r=>fofk(r,k=>/^store is fully ready to process the loans$/i.test(k.trim()))||fofc(r,'Store technically ready')||'',
+  reactSuccess:r=>{const v=fofc(r,'reactivated by loan')||fofc(r,'Is store activated by loan');return typeof v==='string'?v.trim():String(v||'')},
+  portComp:r=>fofk(r,k=>/^competitors visibility\u00a01$/i.test(k))||fofc(r,'Competitors visibility')||'',
+  portChecklist:r=>fofc(r,'Portfolio store checklist readiness')||fofc(r,'Technical readiness')||'',
+  portMarketing:r=>fofk(r,k=>/^marketing materials in good condition/i.test(k.trim()))||fofc(r,'Marketing collaterals installed')||'',
+  soCategory:r=>fofc(r,'Store category')||fofc(r,'category of goods')||'',
+  soSales:r=>fofk(r,k=>/^monthly sales$/i.test(k.trim()))||fofc(r,'General sales volume')||'',
+  soComp:r=>fofk(r,k=>/^competitors visible in store\?\n$/i.test(k)||/^competitors visible in store\?\s*$/i.test(k)&&k!==Object.keys(r).find(k2=>/^competitors visible in store\?$/i.test(k2.trim())))||fofc(r,'Competitors visibility')||'',
+  soContract:r=>fofc(r,'Contract signed')||fofc(r,'signed contract')||'',
+  soWhyNo:r=>fofc(r,'explain why1')||fofc(r,'If NO, briefly explain why')||'',
+  soDocs:r=>fofc(r,'All documents collected')||fofc(r,'all the documents needed')||'',
+  soPhone:r=>fofc(r,"owner phone")||fofc(r,"Owner's phone number")||'',
   whoPresent:r=>fofc(r,'Who is present')||'',
-  offered:r=>fofc(r,'offered Salmon loan')||'',
+  offered:r=>fofc(r,'offered Salmon loan')||fofc(r,'was Salmon offered')||'',
   attempted:r=>fofc(r,'applications were attempted')||'',
   possibleRAs:r=>fofc(r,'possible RAs')||'',
   connectedRAs:r=>fofc(r,'already been connected')||'',
-  newRAs:r=>fofc(r,'new RAs have you connected')||'',
-  totalCust:r=>fofc(r,'Total customers you saw')||'',
+  newRAs:r=>fofc(r,'new RAs have you connected')||fofc(r,'How many new RAs did you connect')||'',
+  totalCust:r=>fofc(r,'Total customers you saw')||fofc(r,'Total store customers you saw')||'',
+  /* Quality fields — work with BOTH form versions */
+  raPresent:r=>fofc(r,'RAs to offer Salmon product loan  present')||fofc(r,'Do all the RAs')||'',
+  raTrained:r=>fofc(r,'current RA pass online training')||'',
+  explainedTriggers:r=>fofc(r,'explained how to catch and process')||'',
+  marketingInstalled:r=>fofc(r,'Marketing collaterals installed')||'',
+  ownerPresent:r=>fofc(r,'Owner present')||fofc(r,'Is the owner present')||'',
+  raPresence:r=>fofc(r,'RA present')||'',
+  incentiveDiscussed:r=>fofc(r,'Incentive program with RA discussed')||'',
+  salmonNews:r=>fofc(r,'tell to all store staff')||'',
+  /* v2 checklists (semicolon-separated items) */
+  actChecklist:r=>fofc(r,'Activation store readiness checklist')||fofc(r,'Technical readiness')||'',
+  reactChecklist:r=>fofc(r,'Reactivation store readiness checklist')||fofc(r,'Technical readiness')||'',
+  portChecklist:r=>fofc(r,'Portfolio store checklist readiness')||fofc(r,'Technical readiness')||'',
+  reactMarketing:r=>fofk(r,k=>/^marketing materials installed/i.test(k.trim().replace(/\u00a0/g,' ')))||fofc(r,'Marketing collaterals installed')||fofc(r,'Marketing materials installed and in good condition')||'',
+  portMarketing:r=>fofk(r,k=>/^marketing materials in good condition/i.test(k.trim().replace(/\u00a0/g,' ')))||fofc(r,'Marketing collaterals installed')||fofc(r,'Marketing materials in good condition and installed')||'',
 };
 
 function foDateKey(r){
@@ -1344,16 +1388,29 @@ function foLd(f){
 /* ═══ MAIN ═══ */
 function foGo(){
   try{
-  const rows=FO_R;if(!rows.length)return;
+  const allRows=FO_R;if(!allRows.length)return;
+  /* Filter to STORE VISIT form only (exclude START/END OF DAY) */
+  const rows=allRows.filter(r=>{const f=fg.form(r);return !f||f==='STORE VISIT'||f==='';});
   const dates=[...new Set(rows.map(foDateKey))].filter(d=>d).sort();
   const ats=[...new Set(rows.map(r=>fg.name(r)))].filter(n=>n).sort();
-  const act=rows.filter(r=>fg.type(r)==='Activation');
-  const react=rows.filter(r=>fg.type(r)==='Reactivation');
-  const port=rows.filter(r=>fg.type(r)==='Portfolio');
-  const so=rows.filter(r=>fg.type(r)==='Store Opening');
+  const typeOf=r=>{const t=fg.type(r).toLowerCase();
+    if(t.includes('activation')&&!t.includes('reactivation'))return 'Activation';
+    if(t.includes('reactivation'))return 'Reactivation';
+    if(t.includes('portfolio'))return 'Portfolio';
+    if(t.includes('store opening')||t.includes('contract signing'))return 'Store Opening';
+    return t;
+  };
+  const act=rows.filter(r=>typeOf(r)==='Activation');
+  const react=rows.filter(r=>typeOf(r)==='Reactivation');
+  const port=rows.filter(r=>typeOf(r)==='Portfolio');
+  const so=rows.filter(r=>typeOf(r)==='Store Opening');
+
+  /* 0. Visit Quality Score table — first on page */
+  foS0_Quality(rows,ats,dates,typeOf,act,react,port,so);
   foS1_Daily(rows,ats,dates);
   foS2_Activation(act);
   foS3_Reactivation(react);
+  foS3b_Portfolio(port);
   foS4_StoreOpening(so);
   foS7_Segmentation(rows,act,react,port,so);
   /* Auto-measure ATS column widths and set Metric column left offset */
@@ -1406,12 +1463,138 @@ function foBMTable(targetId,subsetRows,cfg){
   return h;
 }
 
+/* ═══ S0: Visit Quality Score ═══ */
+function foS0_Quality(rows,ats,dates,typeOf,act,react,port,so){
+  if(!rows.length){document.getElementById('fo-s0').innerHTML='<p style="color:#999;font-size:12px">No visits.</p>';return}
+  const datesIn=[...new Set(rows.map(foDateKey))].filter(d=>d).sort();
+  const atsIn=[...new Set(rows.map(r=>fg.name(r)))].filter(n=>n).sort();
+
+  /* Quality scoring per ATS per date per visit type */
+  const yesLike=v=>{const s=String(v||'').trim().toLowerCase();return s==='yes'||s==='true'||s==='1'||s.startsWith('yes')};
+  const hasPhone=v=>{const s=String(v||'').trim().toLowerCase();return s&&!['','n/a','na','none','-','n\\a','no','0'].includes(s)&&s.length>1};
+  const chkHas=(v,needle)=>{const s=String(v||'').toLowerCase();return s.includes(needle.toLowerCase())};
+
+  /* Activation/Reactivation/Portfolio quality: RA trained + triggers explained + marketing */
+  function arpScore(r,vt){
+    let pts=0,max=3;
+    /* Check for v1 (ALDI form) with separate Yes/No fields */
+    const v1trained=fg.raTrained(r);
+    const v1triggers=fg.explainedTriggers(r);
+    const v1mkt=fg.marketingInstalled(r);
+    if(v1trained||v1triggers||v1mkt){
+      /* v1 format: separate fields */
+      if(yesLike(v1trained))pts++;
+      if(yesLike(v1triggers))pts++;
+      if(yesLike(v1mkt))pts++;
+    } else {
+      /* v2 format: checklist-based */
+      let cl='';
+      if(vt==='Activation') cl=fg.actChecklist(r);
+      else if(vt==='Reactivation') cl=fg.reactChecklist(r);
+      else if(vt==='Portfolio') cl=fg.portChecklist(r);
+      if(chkHas(cl,'RA passed online training'))pts++;
+      if(chkHas(cl,'Triggers for Salmon'))pts++;
+      /* Marketing: from checklist OR separate field */
+      if(chkHas(cl,'Marketing materials installed'))pts++;
+      else{
+        const mkt=vt==='Reactivation'?fg.reactMarketing(r):vt==='Portfolio'?fg.portMarketing(r):fg.marketingInstalled(r);
+        if(yesLike(mkt))pts++;
+      }
+    }
+    return {pts,max,pct:Math.round(pts/max*100)};
+  }
+  /* Store Opening quality: contract=100%, phone=50%, else 0% */
+  function soScore(r){
+    if(yesLike(fg.soContract(r)))return {pts:2,max:2,pct:100};
+    if(hasPhone(fg.soPhone(r)))return {pts:1,max:2,pct:50};
+    return {pts:0,max:2,pct:0};
+  }
+
+  /* Build aggregated data: per ATS × date × visit type */
+  const m={};// key: ats|date → {act:{n,sum}, react:{n,sum}, port:{n,sum}, so:{n,sum}}
+  rows.forEach(r=>{
+    const n=fg.name(r),d=foDateKey(r);if(!n||!d)return;
+    const k=n+'|'+d;
+    if(!m[k])m[k]={act:{n:0,sum:0},react:{n:0,sum:0},port:{n:0,sum:0},so:{n:0,sum:0}};
+    const vt=typeOf(r);
+    if(vt==='Activation'){const s=arpScore(r,'Activation');m[k].act.n++;m[k].act.sum+=s.pct}
+    else if(vt==='Reactivation'){const s=arpScore(r,'Reactivation');m[k].react.n++;m[k].react.sum+=s.pct}
+    else if(vt==='Portfolio'){const s=arpScore(r,'Portfolio');m[k].port.n++;m[k].port.sum+=s.pct}
+    else if(vt==='Store Opening'){const s=soScore(r);m[k].so.n++;m[k].so.sum+=s.pct}
+  });
+
+  const vtypes=[
+    {key:'act',label:'Activation',col:'#4e79a7',sub:'RA trained · Triggers · Marketing'},
+    {key:'react',label:'Reactivation',col:'#f28e2b',sub:'RA trained · Triggers · Marketing'},
+    {key:'port',label:'Portfolio',col:'#59a14f',sub:'RA trained · Triggers · Marketing'},
+    {key:'so',label:'Store Opening',col:'#e15759',sub:'Contract=100% · Phone=50%'}
+  ];
+
+  const tblId='fot_fo-s0';
+  let h=`<div class="tbl-wrap" style="max-height:70vh;overflow:auto"><table id="${tblId}" style="border-collapse:separate;border-spacing:0">`;
+  h+=`<thead><tr style="position:sticky;top:0;z-index:10"><th class="fo-col1" style="text-align:left;z-index:12;background:#f0f0f0;border-right:1px solid #e0e0e0">ATS</th>`;
+  h+=`<th class="fo-col2" style="z-index:12;background:#f0f0f0;border-right:1px solid #e0e0e0;text-align:left">Visit Type</th>`;
+  datesIn.forEach(d=>{h+=`<th class="hm" style="background:#f0f0f0;min-width:56px">${foDateLabel(d)}</th>`});
+  h+=`</tr></thead><tbody>`;
+
+  atsIn.forEach((n,ai)=>{
+    const bg=ai%2===0?'#fff':'#fafafa';
+    vtypes.forEach((vt,vi)=>{
+      h+=`<tr style="background:${bg}">`;
+      if(vi===0) h+=`<td rowspan="${vtypes.length}" class="fo-col1" style="font-size:11px;font-weight:600;z-index:2;background:${bg};border-right:none;vertical-align:top;padding-top:10px;border-bottom:1px solid #ddd">${n}</td>`;
+      h+=`<td class="fo-col2" style="z-index:2;background:${bg};border-right:1px solid #e0e0e0;font-size:11px;color:${vt.col};font-weight:500;padding:4px 8px;box-shadow:2px 0 4px rgba(0,0,0,0.04);${vi===vtypes.length-1?'border-bottom:1px solid #ddd;':''}">${vt.label}</td>`;
+      datesIn.forEach(d=>{
+        const data=m[n+'|'+d];
+        const cell=data?data[vt.key]:{n:0,sum:0};
+        if(cell.n===0){h+=`<td class="hm" style="font-size:11px;${vi===vtypes.length-1?'border-bottom:1px solid #ddd;':''}"><span style="color:#ddd">·</span></td>`}
+        else{
+          const avg=Math.round(cell.sum/cell.n);
+          const clr=avg>=100?'#0d7c5f':avg>=75?'#4e79a7':avg>=50?'#e37400':'#c5221f';
+          h+=`<td class="hm" style="font-size:11px;color:${clr};font-weight:${avg>=75?700:400};${vi===vtypes.length-1?'border-bottom:1px solid #ddd;':''}">${avg}%<span style="font-size:8px;color:#bbb"> (${cell.n})</span></td>`;
+        }
+      });
+      h+=`</tr>`;
+    });
+  });
+  h+=`</tbody></table></div>`;
+  document.getElementById('fo-s0').innerHTML=h;
+}
+
+/* ═══ S3b: Portfolio Tracker ═══ */
+function foS3b_Portfolio(port){
+  const mCol={'Visits':'#333','Offered':'#4e79a7','Attempted':'#e65100','RA Trained':'#0d7c5f','New RA':'#59a14f','Marketing':'#7b1fa2'};
+  const mKey={'Visits':'vis','Offered':'off','Attempted':'att','RA Trained':'rat','New RA':'nra','Marketing':'mkt'};
+  const chkHas=(v,needle)=>String(v||'').toLowerCase().includes(needle.toLowerCase());
+  const yesLike=v=>{const s=String(v||'').trim().toLowerCase();return s.startsWith('yes')||s==='true'||s==='1'};
+  const h=foBMTable('fo-s3b',port,{
+    metrics:['Visits','Offered','Attempted','RA Trained','New RA','Marketing'],
+    mCol,mKey,
+    getData:(r,d)=>{
+      d.vis=(d.vis||0)+1;
+      d.off=(d.off||0)+fonum(fg.offered(r));
+      d.att=(d.att||0)+fonum(fg.attempted(r));
+      /* RA trained: v1 separate field or v2 checklist */
+      const v1t=fg.raTrained(r);
+      if(v1t){if(yesLike(v1t))d.rat=(d.rat||0)+1}
+      else{if(chkHas(fg.portChecklist(r),'RA passed online training'))d.rat=(d.rat||0)+1}
+      /* New RA */
+      try{const v=parseInt(fg.newRAs(r));if(v>0)d.nra=(d.nra||0)+v}catch{}
+      /* Marketing: v1 field or v2 field */
+      const mkt=fg.portMarketing(r)||fg.marketingInstalled(r);
+      if(yesLike(mkt))d.mkt=(d.mkt||0)+1;
+    },
+    highlightMetric:'Attempted',highlightColor:'#e65100'
+  });
+  if(h)document.getElementById('fo-s3b').innerHTML=h;
+}
+
 /* ═══ S1: Daily Tracker ═══ */
 function foS1_Daily(rows,ats,dates){
   const types=['Activation','Reactivation','Portfolio','Store Opening'];
   const tCol={Activation:'#e65100',Reactivation:'#7b1fa2',Portfolio:'#4e79a7','Store Opening':'#0d7c5f'};
+  const normType=t=>{const tl=t.toLowerCase();if(tl.includes('activation')&&!tl.includes('reactivation'))return'Activation';if(tl.includes('reactivation'))return'Reactivation';if(tl.includes('portfolio'))return'Portfolio';if(tl.includes('store opening')||tl.includes('contract signing'))return'Store Opening';return t};
   const m={};
-  rows.forEach(r=>{const n=fg.name(r),d=foDateKey(r),t=fg.type(r);if(!n||!d||!t)return;m[n+'|'+d+'|'+t]=(m[n+'|'+d+'|'+t]||0)+1});
+  rows.forEach(r=>{const n=fg.name(r),d=foDateKey(r),t=normType(fg.type(r));if(!n||!d||!t)return;m[n+'|'+d+'|'+t]=(m[n+'|'+d+'|'+t]||0)+1});
 
   let h=`<div class="tbl-wrap" style="max-height:70vh;overflow:auto"><table style="border-collapse:separate;border-spacing:0">`;
   h+=`<thead><tr style="position:sticky;top:0;z-index:10"><th class="fo-col1" style="text-align:left;z-index:12;background:#f0f0f0;border-right:1px solid #e0e0e0">ATS</th>`;
