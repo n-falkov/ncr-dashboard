@@ -250,10 +250,6 @@ tr:hover .bm-c1,tr:hover .bm-c2{background:#f0f4fa}
             📍 Upload Visited Stores
             <input type="file" id="vsFileIn" accept=".csv,.xlsx" style="display:none">
           </label>
-          <label class="fo-btn" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">
-            📎 Import Mapping
-            <input type="file" id="vsMappingIn" accept=".csv,.xlsx" style="display:none">
-          </label>
           <button class="fo-btn" id="vsExportBtn" style="display:none" onclick="vsExportMapping()">⬇ Export Mapping</button>
           <span id="vsStatus" style="font-size:11px;color:#999"></span>
         </div>
@@ -1450,6 +1446,19 @@ function foGo(){
   foS3b_Portfolio(port);
   foS4_StoreOpening(so);
   foS7_Segmentation(rows,act,react,port,so);
+
+  /* Expose form data for cross-reference with check-ins */
+  const normVT=t=>{const tl=(t||'').toLowerCase();if(tl.includes('activation')&&!tl.includes('reactivation'))return'Activation';if(tl.includes('reactivation'))return'Reactivation';if(tl.includes('portfolio'))return'Portfolio';if(tl.includes('store opening')||tl.includes('contract'))return'Store Opening';return null};
+  const formSummary={};
+  rows.forEach(r=>{
+    const n=fg.name(r); const d=foDateKey(r); const vt=normVT(fg.type(r));
+    if(!n||!d) return;
+    const k=n+'|'+d;
+    if(!formSummary[k]) formSummary[k]={total:0,Activation:0,Reactivation:0,Portfolio:0,'Store Opening':0};
+    formSummary[k].total++; if(vt&&formSummary[k][vt]!==undefined) formSummary[k][vt]++;
+  });
+  window._foFormData=formSummary;
+
   /* Auto-measure ATS column widths and set Metric column left offset */
   requestAnimationFrame(()=>{
     document.querySelectorAll('.fo-col1').forEach(el=>{
@@ -1969,35 +1978,72 @@ function vsSaveMapping(){
 
 function vsRender(){
   const stats=vsProcess();
+  const nonAldi=stats.low+stats.unmatched;
   let h='';
   
   /* Summary cards */
   h+=`<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">`;
   h+=`<div style="background:#f7f8fb;border-radius:8px;padding:12px 16px;min-width:120px;text-align:center"><div style="font-size:24px;font-weight:700">${stats.total}</div><div style="font-size:10px;color:#999;text-transform:uppercase">Total Visited</div></div>`;
-  h+=`<div style="background:#e8f5e9;border-radius:8px;padding:12px 16px;min-width:120px;text-align:center"><div style="font-size:24px;font-weight:700;color:#0d7c5f">${stats.auto}</div><div style="font-size:10px;color:#666;text-transform:uppercase">Auto-Matched</div></div>`;
-  h+=`<div style="background:#fff3e0;border-radius:8px;padding:12px 16px;min-width:120px;text-align:center"><div style="font-size:24px;font-weight:700;color:#e37400">${stats.low}</div><div style="font-size:10px;color:#666;text-transform:uppercase">Low Confidence</div></div>`;
-  h+=`<div style="background:#fce4ec;border-radius:8px;padding:12px 16px;min-width:120px;text-align:center"><div style="font-size:24px;font-weight:700;color:#c5221f">${stats.unmatched}</div><div style="font-size:10px;color:#666;text-transform:uppercase">Unmatched</div></div>`;
-  h+=`<div style="background:#e3f2fd;border-radius:8px;padding:12px 16px;min-width:120px;text-align:center"><div style="font-size:24px;font-weight:700;color:#4e79a7">${(stats.auto/stats.total*100).toFixed(0)}%</div><div style="font-size:10px;color:#666;text-transform:uppercase">Match Rate</div></div>`;
+  h+=`<div style="background:#e8f5e9;border-radius:8px;padding:12px 16px;min-width:120px;text-align:center"><div style="font-size:24px;font-weight:700;color:#0d7c5f">${stats.auto}</div><div style="font-size:10px;color:#666;text-transform:uppercase">ALDI Matched</div></div>`;
+  h+=`<div style="background:#f5f5f5;border-radius:8px;padding:12px 16px;min-width:120px;text-align:center"><div style="font-size:24px;font-weight:700;color:#999">${nonAldi}</div><div style="font-size:10px;color:#999;text-transform:uppercase">Non-ALDI</div></div>`;
+  h+=`<div style="background:#e3f2fd;border-radius:8px;padding:12px 16px;min-width:120px;text-align:center"><div style="font-size:24px;font-weight:700;color:#4e79a7">${stats.total>0?(stats.auto/stats.total*100).toFixed(0):'0'}%</div><div style="font-size:10px;color:#666;text-transform:uppercase">Match Rate</div></div>`;
   h+=`</div>`;
-  
-  /* Unmatched / Low confidence queue */
-  const queue=VS_RECORDS.filter(r=>r.confidence<0.85).sort((a,b)=>b.confidence-a.confidence);
-  if(queue.length){
-    h+=`<div style="margin-bottom:16px"><div style="font-size:10px;color:#999;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Manual Matching Queue (${queue.length})</div>`;
-    h+=`<div style="overflow:auto;max-height:50vh"><table style="width:100%;font-size:11px;border-collapse:collapse">`;
-    h+=`<thead><tr style="background:#f7f8fb;position:sticky;top:0;z-index:2"><th style="text-align:left;padding:6px 8px">Visited Store</th><th style="text-align:left;padding:6px 8px">ATS</th><th style="padding:6px 8px">Date</th><th style="text-align:left;padding:6px 8px">Suggested GR Store</th><th style="padding:6px 8px">Conf.</th><th style="padding:6px 8px">Method</th><th style="padding:6px 8px">Action</th></tr></thead><tbody>`;
-    queue.forEach((r,qi)=>{
-      const bg=qi%2?'#fafafa':'#fff';
-      const confCol=r.confidence>=0.7?'#e37400':'#c5221f';
-      h+=`<tr style="background:${bg};border-bottom:1px solid #eee">`;
-      h+=`<td style="padding:4px 8px;font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.clean}">${r.clean}</td>`;
-      h+=`<td style="padding:4px 8px;white-space:nowrap">${r.owner}</td>`;
-      h+=`<td style="padding:4px 8px;text-align:center">${r.date}</td>`;
-      h+=`<td style="padding:4px 8px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.gr_full||''}">${r.gr_full||'<span style="color:#ccc">—</span>'}</td>`;
-      h+=`<td style="padding:4px 8px;text-align:center;color:${confCol};font-weight:600">${(r.confidence*100).toFixed(0)}%</td>`;
-      h+=`<td style="padding:4px 8px;text-align:center;font-size:10px;color:#999">${r.method}</td>`;
-      h+=`<td style="padding:4px 8px;text-align:center"><button class="fo-btn" style="font-size:10px;padding:2px 8px" onclick="vsConfirm('${r.norm.replace(/'/g,"\\'")}','${(r.gr_id||'').replace(/'/g,"\\'")}')">✓</button></td>`;
-      h+=`</tr>`;
+
+  /* ── Daily Check-in Tracker: ATS × Date × Visit Type ── */
+  const aldiRecs=VS_RECORDS.filter(r=>r.confidence>=0.85&&ALL_ATS_LIST.includes(r.owner));
+  if(aldiRecs.length){
+    const vsDates=[...new Set(aldiRecs.map(r=>r.date))].filter(Boolean).sort();
+    const vsAts=[...new Set(aldiRecs.map(r=>r.owner))].sort();
+    const vtypes=['Activation','Reactivation','Portfolio','Store Opening'];
+    const vtCol={'Activation':'#e65100','Reactivation':'#7b1fa2','Portfolio':'#4e79a7','Store Opening':'#0d7c5f','Total':'#333'};
+    const metrics=['Total',...vtypes];
+
+    /* Build data: ats|date -> {Total, Activation, ...} */
+    const ci={};
+    aldiRecs.forEach(r=>{
+      const k=r.owner+'|'+r.date;
+      if(!ci[k]) ci[k]={Total:0,Activation:0,Reactivation:0,Portfolio:0,'Store Opening':0};
+      ci[k].Total++;
+      const vt=r.vtype||'Unknown';
+      if(ci[k][vt]!==undefined) ci[k][vt]++;
+    });
+
+    h+=`<div style="margin-bottom:16px"><div style="font-size:10px;color:#999;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Daily Check-in Tracker — ALDI Stores</div>`;
+    h+=`<div class="tbl-wrap" style="max-height:70vh;overflow:auto"><table style="border-collapse:separate;border-spacing:0">`;
+    h+=`<thead><tr style="position:sticky;top:0;z-index:10"><th class="fo-col1" style="text-align:left;z-index:12;background:#f0f0f0;border-right:1px solid #e0e0e0">ATS</th>`;
+    h+=`<th class="fo-col2" style="z-index:12;background:#f0f0f0;border-right:1px solid #e0e0e0;text-align:left">Metric</th>`;
+    vsDates.forEach(d=>{
+      const dt=new Date(d+'T12:00:00Z');
+      const dn=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dt.getUTCDay()];
+      const ml=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][dt.getUTCMonth()];
+      h+=`<th style="background:#f0f0f0;text-align:center;min-width:56px;font-size:9px;padding:4px"><div style="font-size:8px;color:#999">${dn}</div>${ml} ${dt.getUTCDate()}</th>`;
+    });
+    h+=`</tr></thead><tbody>`;
+
+    /* Grand Total */
+    h+=`<tr style="background:#f7f7f7;border-bottom:2px solid #ccc"><td class="fo-col1" style="font-size:11px;font-weight:700;z-index:2;background:#f7f7f7;border-right:none">Grand Total</td>`;
+    h+=`<td class="fo-col2" style="z-index:2;background:#f7f7f7;border-right:1px solid #e0e0e0;font-size:11px;font-weight:700">Visits</td>`;
+    vsDates.forEach(d=>{
+      let tot=0;vsAts.forEach(n=>{const c=ci[n+'|'+d];if(c)tot+=c.Total});
+      h+=`<td style="text-align:center;font-weight:700;background:#f7f7f7;font-size:11px">${tot||''}</td>`;
+    });
+    h+=`</tr>`;
+
+    /* Per ATS */
+    vsAts.forEach((n,ai)=>{
+      const bg=ai%2===0?'#fff':'#fafafa';
+      metrics.forEach((mt,mi)=>{
+        h+=`<tr style="background:${bg}">`;
+        if(mi===0) h+=`<td rowspan="${metrics.length}" class="fo-col1" style="font-size:11px;font-weight:600;z-index:2;background:${bg};border-right:none;vertical-align:top;padding-top:10px;border-bottom:1px solid #ddd">${n}</td>`;
+        h+=`<td class="fo-col2" style="z-index:2;background:${bg};border-right:1px solid #e0e0e0;font-size:11px;color:${vtCol[mt]||'#333'};font-weight:500;padding:4px 8px;box-shadow:2px 0 4px rgba(0,0,0,0.04);${mi===metrics.length-1?'border-bottom:1px solid #ddd;':''}">${mt}</td>`;
+        vsDates.forEach(d=>{
+          const c=ci[n+'|'+d];
+          const v=c?c[mt]||0:0;
+          const isHL=mt==='Total'&&v>0;
+          h+=`<td style="text-align:center;font-size:11px;${isHL?'font-weight:700;':''}color:${v?(vtCol[mt]||'#333'):'#ddd'};${mi===metrics.length-1?'border-bottom:1px solid #ddd;':''}">${v||'·'}</td>`;
+        });
+        h+=`</tr>`;
+      });
     });
     h+=`</tbody></table></div></div>`;
   }
@@ -2087,6 +2133,87 @@ function vsRender(){
     });
     h+=`</tr></tbody></table></div></div>`;
   }
+
+  /* ── Form vs Check-in Cross-Reference ── */
+  const formData=window._foFormData||{};
+  if(Object.keys(formData).length && aldiRecs.length){
+    /* Build check-in data: ATS × date → {total, types} */
+    const ciData={};
+    aldiRecs.forEach(r=>{
+      const k=r.owner+'|'+r.date;
+      if(!ciData[k]) ciData[k]={total:0,Activation:0,Reactivation:0,Portfolio:0,'Store Opening':0};
+      ciData[k].total++; const vt=r.vtype; if(vt&&ciData[k][vt]!==undefined) ciData[k][vt]++;
+    });
+
+    /* Get all ATS × dates from both */
+    const allKeys=new Set([...Object.keys(formData),...Object.keys(ciData)]);
+    const xAts=new Set(); const xDates=new Set();
+    allKeys.forEach(k=>{const[a,d]=k.split('|');if(ALL_ATS_LIST.includes(a)){xAts.add(a);xDates.add(d)}});
+    const sortedAts=[...xAts].sort();
+
+    /* Summary per ATS */
+    const summary={};
+    sortedAts.forEach(n=>{
+      let ft=0,ct=0,fTypes={Activation:0,Reactivation:0,Portfolio:0,'Store Opening':0},cTypes={...fTypes};
+      [...xDates].forEach(d=>{
+        const k=n+'|'+d;
+        const f=formData[k]; const c=ciData[k];
+        if(f){ft+=f.total;['Activation','Reactivation','Portfolio','Store Opening'].forEach(vt=>fTypes[vt]+=f[vt])}
+        if(c){ct+=c.total;['Activation','Reactivation','Portfolio','Store Opening'].forEach(vt=>cTypes[vt]+=c[vt])}
+      });
+      summary[n]={formTotal:ft,ciTotal:ct,delta:ct-ft,fTypes,cTypes};
+    });
+
+    h+=`<div style="margin-top:20px"><div style="font-size:10px;color:#999;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Form vs Check-in — Discipline Summary</div>`;
+    h+=`<div style="overflow-x:auto"><table style="width:100%;font-size:11px;border-collapse:collapse">`;
+    h+=`<thead><tr style="background:#f7f8fb">`;
+    h+=`<th style="text-align:left;padding:6px 8px" rowspan="2">ATS</th>`;
+    h+=`<th style="padding:6px 8px;text-align:center;border-bottom:1px solid #e0e0e0" colspan="2">Total</th>`;
+    h+=`<th style="padding:6px 8px;text-align:center;border-bottom:1px solid #e0e0e0" rowspan="2">Δ</th>`;
+    h+=`<th style="padding:6px 8px;text-align:center;border-bottom:1px solid #e0e0e0;color:#e65100" colspan="2">Activation</th>`;
+    h+=`<th style="padding:6px 8px;text-align:center;border-bottom:1px solid #e0e0e0;color:#7b1fa2" colspan="2">Reactivation</th>`;
+    h+=`<th style="padding:6px 8px;text-align:center;border-bottom:1px solid #e0e0e0;color:#4e79a7" colspan="2">Portfolio</th>`;
+    h+=`<th style="padding:6px 8px;text-align:center;border-bottom:1px solid #e0e0e0;color:#0d7c5f" colspan="2">Store Opening</th>`;
+    h+=`</tr><tr style="background:#f7f8fb">`;
+    h+=`<th style="padding:4px 6px;font-size:9px;color:#666">Form</th><th style="padding:4px 6px;font-size:9px;color:#666">Check-in</th>`;
+    for(let i=0;i<4;i++) h+=`<th style="padding:4px 6px;font-size:9px;color:#666">F</th><th style="padding:4px 6px;font-size:9px;color:#666">CI</th>`;
+    h+=`</tr></thead><tbody>`;
+
+    let gf=0,gc=0,gft={Activation:0,Reactivation:0,Portfolio:0,'Store Opening':0},gct={...gft};
+    sortedAts.forEach((n,i)=>{
+      const s=summary[n]; if(!s) return;
+      const dCol=s.delta>0?'#0d7c5f':s.delta<0?'#c5221f':'#999';
+      const dSign=s.delta>0?'+':'';
+      gf+=s.formTotal; gc+=s.ciTotal;
+      h+=`<tr style="background:${i%2?'#fafafa':'#fff'};border-bottom:1px solid #eee">`;
+      h+=`<td style="padding:4px 8px;font-weight:600;white-space:nowrap">${n}</td>`;
+      h+=`<td style="padding:4px 8px;text-align:center">${s.formTotal||'·'}</td>`;
+      h+=`<td style="padding:4px 8px;text-align:center">${s.ciTotal||'·'}</td>`;
+      h+=`<td style="padding:4px 8px;text-align:center;font-weight:700;color:${dCol}">${s.delta?dSign+s.delta:'—'}</td>`;
+      ['Activation','Reactivation','Portfolio','Store Opening'].forEach(vt=>{
+        const fv=s.fTypes[vt], cv=s.cTypes[vt];
+        gft[vt]+=fv; gct[vt]+=cv;
+        const mismatch=fv!==cv;
+        h+=`<td style="padding:4px 8px;text-align:center;${mismatch?'background:#fff8e1;':''}">${fv||'·'}</td>`;
+        h+=`<td style="padding:4px 8px;text-align:center;${mismatch?'background:#fff8e1;':''}">${cv||'·'}</td>`;
+      });
+      h+=`</tr>`;
+    });
+
+    const gd=gc-gf; const gdCol=gd>0?'#0d7c5f':gd<0?'#c5221f':'#999';
+    h+=`<tr style="border-top:2px solid #333;font-weight:700;background:#f7f8fb">`;
+    h+=`<td style="padding:4px 8px">TOTAL</td>`;
+    h+=`<td style="padding:4px 8px;text-align:center">${gf}</td>`;
+    h+=`<td style="padding:4px 8px;text-align:center">${gc}</td>`;
+    h+=`<td style="padding:4px 8px;text-align:center;color:${gdCol}">${gd?(gd>0?'+':'')+gd:'—'}</td>`;
+    ['Activation','Reactivation','Portfolio','Store Opening'].forEach(vt=>{
+      h+=`<td style="padding:4px 8px;text-align:center">${gft[vt]||'·'}</td>`;
+      h+=`<td style="padding:4px 8px;text-align:center">${gct[vt]||'·'}</td>`;
+    });
+    h+=`</tr></tbody></table></div>`;
+    h+=`<div style="font-size:10px;color:#bbb;margin-top:6px">Δ = Check-in − Form. Yellow cells = type mismatch. Appears only when both Form and Check-in files are loaded.</div>`;
+    h+=`</div>`;
+  }
   
   document.getElementById('vsMatchCenter').innerHTML=h;
   document.getElementById('vsExportBtn').style.display=VS_RECORDS.length?'inline-flex':'none';
@@ -2150,50 +2277,7 @@ document.getElementById('vsFileIn').onchange=e=>{
   else reader.readAsArrayBuffer(f);
 };
 
-document.getElementById('vsMappingIn').onchange=e=>{
-  if(!e.target.files.length) return;
-  const f=e.target.files[0];
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    try{
-      let rows;
-      if(f.name.endsWith('.csv')){
-        const text=ev.target.result;
-        const lines=text.split('\n');
-        const headers=lines[0].split(',').map(h=>h.replace(/^"|"$/g,'').trim());
-        rows=[];
-        for(let i=1;i<lines.length;i++){
-          if(!lines[i].trim()) continue;
-          const vals=[];let cur='',inQ=false;
-          for(const ch of lines[i]){if(ch==='"')inQ=!inQ;else if(ch===','&&!inQ){vals.push(cur.trim());cur=''}else cur+=ch}
-          vals.push(cur.trim());
-          const row={};headers.forEach((h,j)=>{row[h]=vals[j]||''});rows.push(row);
-        }
-      } else {
-        const wb=XLSX.read(ev.target.result,{type:'array'});
-        rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
-      }
-      let imported=0;
-      rows.forEach(r=>{
-        const raw=r.visited_store_name_raw||r['Visited Record Name']||'';
-        const grId=r.matched_gr_store_id||r.matched_store_id||'';
-        const grFull=r.matched_gr_store_fullname||'';
-        if(!raw) return;
-        const norm=vsNorm(raw);
-        if(grId&&GR_BY_ID[grId]){
-          VS_MATCHES[norm]={gr_full:GR_BY_ID[grId].full,gr_id:grId,confidence:1.0,method:'manual'};imported++;
-        } else if(grFull){
-          VS_MATCHES[norm]={gr_full:grFull,gr_id:'',confidence:0.95,method:'imported'};imported++;
-        }
-      });
-      vsSaveMapping();
-      document.getElementById('vsStatus').textContent+=` | Mapping: ${imported} imported`;
-      if(VS_DATA.length) vsRender();
-    }catch(err){alert('Error loading mapping: '+err.message)}
-  };
-  if(f.name.endsWith('.csv')) reader.readAsText(f);
-  else reader.readAsArrayBuffer(f);
-};
+
 
 go('bizmetrics');
 
